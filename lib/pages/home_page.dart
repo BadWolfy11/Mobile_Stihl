@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:stihl_mobile/pages/expenses_page.dart';
-import 'package:stihl_mobile/pages/goods_page.dart';
+import 'goods/goods_page.dart';
 import 'scanner_page.dart';
 
 

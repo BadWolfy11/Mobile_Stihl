@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'theme/theme.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,11 +17,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'STIHL mobile',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange,
-          brightness: Brightness.dark),
+        theme: AppTheme.lightTheme.copyWith(
+        textTheme: GoogleFonts.mulishTextTheme(
+          Theme.of(context).textTheme,
         ),
+      ),
         home: MyHomePage(),
       );
 
