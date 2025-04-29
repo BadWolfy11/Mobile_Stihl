@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:stihl_mobile/theme/light_color.dart';
 
 import '../../widgets/pagination_bar.dart';
 import '../../widgets/search_filter.dart';
 import 'product_detail_page.dart';
+
 import 'goods_card.dart';
 import 'goods_dialog.dart';
 
@@ -13,7 +15,9 @@ class GoodsPage extends StatefulWidget {
 
 class _GoodsPageState extends State<GoodsPage> {
   int _currentPage = 1;
+  int _totalPages = 5;
   String _searchQuery = '';
+  String? _selectedCategory;
 
   final List<Map<String, dynamic>> _goods = List.generate(
     15,
@@ -31,8 +35,11 @@ class _GoodsPageState extends State<GoodsPage> {
 
   List<Map<String, dynamic>> get _filteredGoods {
     return _goods.where((product) {
-      return product['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesSearch = product['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
           product['description'].toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == null || _selectedCategory == 'Все' ||
+          product['category'] == _selectedCategory;
+      return matchesSearch && matchesCategory;
     }).toList();
   }
 
@@ -43,8 +50,7 @@ class _GoodsPageState extends State<GoodsPage> {
   }
 
   void _nextPage() {
-    final totalPages = (_filteredGoods.length / 5).ceil().clamp(1, double.infinity).toInt();
-    if (_currentPage < totalPages) {
+    if (_currentPage < _totalPages) {
       setState(() => _currentPage++);
     }
   }
@@ -67,13 +73,7 @@ class _GoodsPageState extends State<GoodsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPages = (_filteredGoods.length / 5).ceil().clamp(1, double.infinity).toInt();
-    if (_currentPage > totalPages) _currentPage = totalPages;
-
-    final displayedGoods = _filteredGoods
-        .skip((_currentPage - 1) * 5)
-        .take(5)
-        .toList();
+    final displayedGoods = _filteredGoods.skip((_currentPage - 1) * 3).take(5).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -92,9 +92,13 @@ class _GoodsPageState extends State<GoodsPage> {
                 _currentPage = 1;
               });
             },
-            onFilterSelected: () {
-              print("Фильтр выбран");
+            onFilterSelected: (selectedCategory) {
+              setState(() {
+                _selectedCategory = selectedCategory;
+                _currentPage = 1;
+              });
             },
+            categories: ['Все', 'Категория 1', 'Категория 2', 'Категория 3'],
           ),
           Expanded(
             child: ListView.builder(
@@ -109,16 +113,19 @@ class _GoodsPageState extends State<GoodsPage> {
           ),
           PaginationBar(
             currentPage: _currentPage,
-            totalPages: totalPages,
+            totalPages: _totalPages,
             onPrevious: _previousPage,
             onNext: _nextPage,
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.orange,
-        child: Icon(Icons.add),
-        onPressed: _showAddDialog,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60.0), // выше пагинации
+        child: FloatingActionButton(
+          backgroundColor: LightColor.orange,
+          child: Icon(Icons.add, color: Colors.white),
+          onPressed: _showAddDialog,
+        ),
       ),
     );
   }
