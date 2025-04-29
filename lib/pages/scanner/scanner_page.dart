@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stihl_mobile/pages/scan_Page.dart';
+import 'package:stihl_mobile/pages/scanner//scan_Page.dart';
 
 // import '../widgets/big_card.dart';
 // import '../widgets/history_list.dart';

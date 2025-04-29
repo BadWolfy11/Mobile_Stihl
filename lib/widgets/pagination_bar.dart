@@ -15,24 +15,40 @@ class PaginationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const buttonWidth = 100.0; // Задаём фиксированную ширину кнопок
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (currentPage > 1)
-            ElevatedButton(
+          SizedBox(
+            width: buttonWidth,
+            child: currentPage > 1
+                ? ElevatedButton(
               onPressed: onPrevious,
               child: Text('Назад'),
+            )
+                : ElevatedButton(
+              onPressed: null, // неактивная кнопка
+              child: Text('Назад'),
             ),
+          ),
           SizedBox(width: 20),
           Text('Страница $currentPage из $totalPages'),
           SizedBox(width: 20),
-          if (currentPage < totalPages)
-            ElevatedButton(
+          SizedBox(
+            width: buttonWidth,
+            child: currentPage < totalPages
+                ? ElevatedButton(
               onPressed: onNext,
               child: Text('Вперед'),
+            )
+                : ElevatedButton(
+              onPressed: null, // неактивная кнопка
+              child: Text('Вперед'),
             ),
+          ),
         ],
       ),
     );

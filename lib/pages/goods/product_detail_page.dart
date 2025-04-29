@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 import '../../theme/light_color.dart';
 import '../../theme/theme.dart';
+import '../../widgets/barcode_copy.dart';
 import '../../widgets/title_text.dart';
+import 'goods_dialog.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final Map<String, dynamic> product;
@@ -50,96 +52,157 @@ class ProductDetailPage extends StatelessWidget {
     return Container(
       padding: AppTheme.padding.copyWith(top: 16, bottom: 0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
         color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                  color: LightColor.iconColor,
-                  borderRadius: BorderRadius.all(Radius.circular(10))),
-            ),
-          ),
           SizedBox(height: 20),
-          TitleText(text: product['name'], fontSize: 25),
-          SizedBox(height: 10),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TitleText(
-                text: "${product['price']} ₽",
-                fontSize: 25,
-                color: LightColor.orange,
+              Expanded(
+                child: TitleText(
+                  text: product['name'],
+                  fontSize: 25,
+                ),
               ),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: "${product['price']}",
+                      style: TextStyle(
+                        fontSize: 25,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: " ₽",
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Text("${product['id']}",
+              style: TextStyle(color: LightColor.grey, fontSize: 18, fontWeight: FontWeight.w500)),
+
+
               // Spacer(),
               // Icon(Icons.star, color: LightColor.yellowColor, size: 20),
               // Icon(Icons.star, color: LightColor.yellowColor, size: 20),
               // Icon(Icons.star, color: LightColor.yellowColor, size: 20),
               // Icon(Icons.star, color: LightColor.yellowColor, size: 20),
               // Icon(Icons.star_border, color: Colors.grey, size: 20),
+
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: product['stock'] > 0 ? Colors.green[100] : Colors.red[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  product['stock'] > 0 ? 'ЕСТЬ В НАЛИЧИИ' : 'НЕТ В НАЛИЧИИ',
+                  style: TextStyle(
+                    color: product['stock'] > 0 ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ),
-          SizedBox(height: 10),
-          _infoItem("Описание", product['description']),
-          _infoItem("Категория", product['category']),
-          _infoItem("Остаток", "${product['stock']} шт."),
+          SizedBox(height: 20),
+          _infoRow("Описание", product['description']),
+          _infoRow("Категория", product['category']),
+          _infoRow("Остаток", "${product['stock']} шт."),
           SizedBox(height: 20),
           Divider(),
           SizedBox(height: 20),
           // Штрихкод
 
           Center(
-            child:
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center, // Центрирует по горизонтали
-                children: [
-                  Text(
-                    'Штрихкод/QR-код:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 10),
-                  BarcodeWidget(
-                    barcode: Barcode.code128(), // Или Barcode.qrCode()
-                    data: product['barcode'],   // Генерация по твоему полю
-                    width: 200,
-                    height: 80,
-                  ),
-
-                ],)
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                BarcodeWithCopyButton(data: product['barcode']),
+              ],
+            ),
           ),
 
+          SizedBox(height: 20)
+
 
         ],
       ),
     );
   }
 
-  Widget _infoItem(String title, String value) {
+  Widget _infoRow(String label, String value, {bool highlight = false}) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
         children: [
-          TitleText(text: title, fontSize: 16, color: LightColor.grey),
-          SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 16)),
+          Expanded(child: Text(label, style: TextStyle(color: LightColor.grey, fontWeight: FontWeight.w800))),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Удалить товар"),
+          content: Text("Вы уверены, что хотите удалить этот товар?"),
+          actions: [
+            TextButton(
+              child: Text("Отмена"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text("Удалить"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Закрыть карточку товара
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Товар удалён (демо)')),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: LightColor.orange,
-        child: Icon(Icons.shopping_basket),
-        onPressed: () {},
-      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -149,7 +212,7 @@ class ProductDetailPage extends StatelessWidget {
         ),
         title: Text(product['name'], style: TextStyle(color: Colors.black)),
       ),
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -162,6 +225,44 @@ class ProductDetailPage extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: Icon(Icons.edit, color: Colors.white),
+                label: Text('Изменить', style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => GoodsDialog(itemId: product['id']),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                ),
+                icon: Icon(Icons.delete, color: Colors.white),
+                label: Text('Удалить', style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  _showDeleteConfirmation(context);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
+
 }

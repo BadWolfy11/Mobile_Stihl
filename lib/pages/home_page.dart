@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:stihl_mobile/pages/expenses_page.dart';
-import 'goods/goods_page.dart';
-import 'scanner_page.dart';
+import 'package:stihl_mobile/pages/goods/goods_page.dart';
+import 'package:stihl_mobile/pages/scanner/scanner_page.dart';
+
+import '../widgets/BottomNavigationBar/bottom_navigation_bar.dart';
 
 
 class MyHomePage extends StatefulWidget {
@@ -11,7 +12,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
+  int selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,9 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       case 2:
         page = ExpensesPage();
+        break;
+      case 3:
+        page = Center(child: Text("Остальные затраты")); // Заменить на нужную страницу
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -48,37 +52,14 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(child: mainArea),
                 SafeArea(
-                  child: BottomNavigationBar(
-
-                    backgroundColor: colorScheme.secondary, // Фон панели
-                    selectedItemColor: Colors.orange, // Цвет выбранной иконки
-                    unselectedItemColor: Colors.white70,
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home),
-                        label: 'Главная',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.shopping_cart),
-                        label: 'Товары',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.edit_document),
-                        label: 'Документы',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.all_inbox_rounded),
-                        label: 'Остальные затраты',
-                      ),
-                    ],
-                    currentIndex: selectedIndex,
-                    onTap: (value) {
+                  child: CustomBottomNavigationBar(
+                    onIconPresedCallback: (int index) {
                       setState(() {
-                        selectedIndex = value;
+                        selectedIndex = index;
                       });
                     },
                   ),
-                )
+                ),
               ],
             );
           } else {
@@ -103,8 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         label: Text('Документы'),
                       ),
                       NavigationRailDestination(
-                        icon: Icon(Icons.all_inbox_outlined),
-                        label: Text('Остальные затраты'),
+                        icon: Icon(Icons.all_inbox_rounded),
+                        label: Text('Остальные'),
                       ),
                     ],
                     selectedIndex: selectedIndex,

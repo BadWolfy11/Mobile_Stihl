@@ -19,6 +19,21 @@ class AppTheme {
     primaryTextTheme: ThemeData.light().textTheme.copyWith(
       bodyLarge: const TextStyle(color: LightColor.titleTextColor),
     ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: LightColor.white, backgroundColor: LightColor.orange, // Белый цвет текста
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: LightColor.white, backgroundColor: LightColor.orange, // Оранжевый фон
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: LightColor.white, side: BorderSide(color: LightColor.orange), // Оранжевая рамка
+      ),
+    ),
   );
 
   // Заголовки

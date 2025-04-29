@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/pagination_bar.dart';
+import '../../widgets/search_filter.dart';
 import 'product_detail_page.dart';
-
 import 'goods_card.dart';
 import 'goods_dialog.dart';
-import 'pagination_bar.dart';
 
 class GoodsPage extends StatefulWidget {
   @override
@@ -13,7 +13,8 @@ class GoodsPage extends StatefulWidget {
 
 class _GoodsPageState extends State<GoodsPage> {
   int _currentPage = 1;
-  int _totalPages = 5;
+  String _searchQuery = '';
+
   final List<Map<String, dynamic>> _goods = List.generate(
     15,
         (index) => {
@@ -24,9 +25,16 @@ class _GoodsPageState extends State<GoodsPage> {
       'price': (index + 1) * 1000,
       'category': 'Категория ${index % 3 + 1}',
       'stock': index * 5,
-      'image': '/assets/images/products/product1.jpg', // 5 разных изображений
+      'image': 'assets/images/products/product1.jpg',
     },
   );
+
+  List<Map<String, dynamic>> get _filteredGoods {
+    return _goods.where((product) {
+      return product['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          product['description'].toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
 
   void _previousPage() {
     if (_currentPage > 1) {
@@ -35,7 +43,8 @@ class _GoodsPageState extends State<GoodsPage> {
   }
 
   void _nextPage() {
-    if (_currentPage < _totalPages) {
+    final totalPages = (_filteredGoods.length / 5).ceil().clamp(1, double.infinity).toInt();
+    if (_currentPage < totalPages) {
       setState(() => _currentPage++);
     }
   }
@@ -58,7 +67,13 @@ class _GoodsPageState extends State<GoodsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedGoods = _goods.skip((_currentPage-1)*3).take(5).toList();
+    final totalPages = (_filteredGoods.length / 5).ceil().clamp(1, double.infinity).toInt();
+    if (_currentPage > totalPages) _currentPage = totalPages;
+
+    final displayedGoods = _filteredGoods
+        .skip((_currentPage - 1) * 5)
+        .take(5)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -70,18 +85,31 @@ class _GoodsPageState extends State<GoodsPage> {
       ),
       body: Column(
         children: [
+          SearchFilterWidget(
+            onSearchChanged: (query) {
+              setState(() {
+                _searchQuery = query;
+                _currentPage = 1;
+              });
+            },
+            onFilterSelected: () {
+              print("Фильтр выбран");
+            },
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: displayedGoods.length,
-              itemBuilder: (context, index) => InkWell(
-                onTap: () => _showProductDetail(displayedGoods[index]),
-                child: GoodsCard(goods: displayedGoods[index]),
-              ),
+              itemBuilder: (context, index) {
+                return GoodsCard(
+                  goods: displayedGoods[index],
+                  onTap: () => _showProductDetail(displayedGoods[index]),
+                );
+              },
             ),
           ),
           PaginationBar(
             currentPage: _currentPage,
-            totalPages: _totalPages,
+            totalPages: totalPages,
             onPrevious: _previousPage,
             onNext: _nextPage,
           ),
