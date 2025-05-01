@@ -1,49 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:stihl_mobile/theme/light_color.dart';
 
 import '../../widgets/pagination_bar.dart';
 import '../../widgets/search_filter.dart';
-import 'product_detail_page.dart';
+import 'expenses_card.dart';
+import 'expenses_dialog.dart';
+import 'expenses_detail_page.dart';
 
-import 'goods_card.dart';
-import 'goods_dialog.dart';
-
-class GoodsPage extends StatefulWidget {
+class ExpensesPage extends StatefulWidget {
   @override
-  _GoodsPageState createState() => _GoodsPageState();
+  _ExpensesPageState createState() => _ExpensesPageState();
 }
 
-class _GoodsPageState extends State<GoodsPage> {
+class _ExpensesPageState extends State<ExpensesPage> {
   int _currentPage = 1;
-  final int _itemsPerPage = 20;
+  final int _itemsPerPage = 10;
   String _searchQuery = '';
   String? _selectedCategory;
 
-  final List<Map<String, dynamic>> _goods = List.generate(
-    73, // например, 73 товара
+  final List<Map<String, dynamic>> _expenses = List.generate(
+    43,
         (index) => {
       'id': index + 1,
-      'name': 'Товар ${index + 1}',
-      'description': 'Описание товара ${index + 1}',
-      'barcode': '460${1000000000 + index}',
-      'price': (index + 1) * 1000,
+      'name': 'Расход ${index + 1}',
+      'amount': (index + 1) * 100,
+      'date': DateFormat('yyyy-MM-dd').format(
+        DateTime.now().subtract(Duration(days: index)),
+      ),
       'category': 'Категория ${index % 3 + 1}',
-      'stock': index * 5,
-      'image': 'assets/images/products/product1.jpg',
+      'attachments': 'assets/images/products/product1.jpg', // или null
     },
   );
 
-  List<Map<String, dynamic>> get _filteredGoods {
-    return _goods.where((product) {
-      final matchesSearch = product['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          product['description'].toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == null || _selectedCategory == 'Все' ||
-          product['category'] == _selectedCategory;
+
+  List<Map<String, dynamic>> get _filteredExpenses {
+    return _expenses.where((expense) {
+      final matchesSearch = expense['name'].toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == null || _selectedCategory == 'Все' || expense['category'] == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
   }
 
-  int get _totalPages => (_filteredGoods.length / _itemsPerPage).ceil();
+  int get _totalPages => (_filteredExpenses.length / _itemsPerPage).ceil();
+
   void _previousPage() {
     if (_currentPage > 1) {
       setState(() => _currentPage--);
@@ -59,30 +59,29 @@ class _GoodsPageState extends State<GoodsPage> {
   void _showAddDialog() {
     showDialog(
       context: context,
-      builder: (context) => GoodsDialog(),
+      builder: (context) => ExpensesDialog(),
     );
   }
 
-  void _showProductDetail(Map<String, dynamic> product) {
+  void _showExpenseDetail(Map<String, dynamic> expense) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProductDetailPage(product: product),
+        builder: (context) => ExpensesDetailPage(expense: expense),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final displayedGoods = _filteredGoods
+    final displayedExpenses = _filteredExpenses
         .skip((_currentPage - 1) * _itemsPerPage)
         .take(_itemsPerPage)
         .toList();
 
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Товары', style: TextStyle(fontSize: 24)),
+        title: Text('Прочие затраты', style: TextStyle(fontSize: 24)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -107,11 +106,11 @@ class _GoodsPageState extends State<GoodsPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: displayedGoods.length,
+              itemCount: displayedExpenses.length,
               itemBuilder: (context, index) {
-                return GoodsCard(
-                  goods: displayedGoods[index],
-                  onTap: () => _showProductDetail(displayedGoods[index]),
+                return ExpensesCard(
+                  expense: displayedExpenses[index],
+                  onTap: () => _showExpenseDetail(displayedExpenses[index]),
                 );
               },
             ),
@@ -125,7 +124,7 @@ class _GoodsPageState extends State<GoodsPage> {
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 60.0), // выше пагинации
+        padding: const EdgeInsets.only(bottom: 60.0),
         child: FloatingActionButton(
           backgroundColor: LightColor.orange,
           child: Icon(Icons.add, color: Colors.white),

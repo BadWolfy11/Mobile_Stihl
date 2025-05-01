@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:stihl_mobile/pages/expenses_page.dart';
 import 'package:stihl_mobile/pages/goods/goods_page.dart';
 import 'package:stihl_mobile/pages/scanner/scanner_page.dart';
 
 import '../widgets/BottomNavigationBar/bottom_navigation_bar.dart';
+import 'expenses/expenses_page.dart';
+import 'expenses_page.dart';
 
 
 class MyHomePage extends StatefulWidget {
