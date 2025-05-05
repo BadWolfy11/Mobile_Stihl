@@ -3,8 +3,8 @@ import 'package:stihl_mobile/pages/goods/goods_page.dart';
 import 'package:stihl_mobile/pages/main_page.dart';
 
 import '../widgets/BottomNavigationBar/bottom_navigation_bar.dart';
-import 'expenses/expenses_page.dart';
-import 'expenses_page.dart';
+import '../pages/expenses/expenses_page.dart';
+import '../pages/expenses_page.dart';
 
 
 class MyHomePage extends StatefulWidget {
@@ -22,7 +22,9 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = ScannerPage();
+        page = MainPage();
+
+
         break;
       case 1:
         page = GoodsPage();
@@ -31,7 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = ExpensesPage();
         break;
       case 3:
-        page = Center(child: Text("Остальные затраты")); // Заменить на нужную страницу
+        page = Center(child: Text("Остальные затраты"));
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');

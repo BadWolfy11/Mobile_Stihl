@@ -40,6 +40,7 @@ dependencies:
   google_fonts: ^4.0.5
   barcode_widget: ^2.0.3
   image_picker: ^1.0.4
+  flutter_svg: ^2.0.7
 
 
 
@@ -73,6 +74,7 @@ flutter:
   assets:
     - assets/images/products/
     - assets/images/products/product1.jpg
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

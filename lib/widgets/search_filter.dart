@@ -34,7 +34,7 @@ class SearchFilterWidget extends StatelessWidget {
                     onChanged: onSearchChanged,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: "Поиск продуктов",
+                      hintText: "Поиск",
                       hintStyle: TextStyle(fontSize: 12),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       prefixIcon: Icon(Icons.search, color: Colors.black54),

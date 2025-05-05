@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:stihl_mobile/pages/scanner/scan_Page.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../config/user_provider.dart';
 import '../theme/light_color.dart';
 import '../theme/theme.dart';
-import 'package:intl/intl.dart';
+import 'all_info/data_viewer_page.dart';
+import 'scanner/scan_Page.dart';
+import 'profile/profile_page.dart';
+import 'profile/models.dart';
 
-class ScannerPage extends StatelessWidget {
-  const ScannerPage({Key? key}) : super(key: key);
 
-  Widget _greeting() {
+class MainPage extends StatefulWidget {
+
+  const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  Widget _greeting(String name) {
     final today = DateFormat('d MMMM yyyy', 'ru_RU').format(DateTime.now());
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -15,14 +28,14 @@ class ScannerPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 22, color: Colors.black),
+            text: TextSpan(
+              style: const TextStyle(fontSize: 22, color: Colors.black),
               children: [
-                TextSpan(
+                const TextSpan(
                   text: 'Добро ',
                   style: TextStyle(color: LightColor.orange),
                 ),
-                TextSpan(text: 'пожаловать, Пользователь!'),
+                TextSpan(text: 'пожаловать, $name!'),
               ],
             ),
           ),
@@ -35,40 +48,27 @@ class ScannerPage extends StatelessWidget {
       ),
     );
   }
-  // Квадратная аватарка в AppBar
-  Widget _avatarInAppBar(BuildContext context) {
-    return PopupMenuButton<String>(
-      onSelected: (value) {
-        if (value == 'profile') {
-          // TODO: Навигация на профиль
-          Navigator.pushNamed(context, '/profile');
-        } else if (value == 'logout') {
-          // TODO: Выйти из аккаунта
-          // Например: context.read<AuthService>().logout();
-        }
+
+  Route _slideFromLeftRoute(Map<String, dynamic> user) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          UserProfileScreen(user: user),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(-1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+        final tween =
+        Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
-      itemBuilder: (BuildContext context) => [
-        const PopupMenuItem<String>(
-          value: 'profile',
-          child: Row(
-            children: [
-              Icon(Icons.person, color: Colors.black),
-              SizedBox(width: 8),
-              Text('Профиль'),
-            ],
-          ),
-        ),
-        const PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: [
-              Icon(Icons.logout, color: Colors.black),
-              SizedBox(width: 8),
-              Text('Выйти'),
-            ],
-          ),
-        ),
-      ],
+    );
+  }
+
+  Widget _avatarInAppBar(BuildContext context, Map<String, dynamic> user) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(_slideFromLeftRoute(user));
+      },
       child: Container(
         width: 40,
         height: 40,
@@ -81,7 +81,11 @@ class ScannerPage extends StatelessWidget {
     );
   }
 
-  // Белая кнопка с светло-серой рамкой и черным текстом
+  void _logout(BuildContext context) {
+    Provider.of<UserProvider>(context, listen: false).clearUser();
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   Widget _actionButton(
       BuildContext context,
       String label,
@@ -105,10 +109,7 @@ class ScannerPage extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.black,
-              ),
+              style: const TextStyle(fontSize: 18, color: Colors.black),
             ),
           ],
         ),
@@ -118,33 +119,41 @@ class ScannerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final userId = Provider.of<UserProvider>(context).userId;
 
+    if (userId == null) {
+      Future.microtask(() {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+      return const SizedBox.shrink(); // пустая заглушка на момент перехода
+    }
+
+    final user = users.firstWhere((u) => u['id'] == userId);
+    final person = persons.firstWhere((p) => p['id'] == user['person_id']);
+
+    return Scaffold(
       backgroundColor: LightColor.background,
       appBar: AppBar(
         backgroundColor: LightColor.background,
         elevation: 0,
+        automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
               'Главная',
-              style: TextStyle(
-                fontSize: 24,
-                color: LightColor.black,
-              ),
+              style: TextStyle(fontSize: 24, color: LightColor.black),
             ),
-            _avatarInAppBar(context),
+            _avatarInAppBar(context, user),
           ],
         ),
-        automaticallyImplyLeading: false, // Удаляет стрелку "назад"
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _greeting(),
+            _greeting(person['name']),
             _actionButton(
               context,
               'Открыть камеру',
@@ -152,16 +161,16 @@ class ScannerPage extends StatelessWidget {
                   () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ScanScreen()),
+                  MaterialPageRoute(builder: (_) => ScanScreen()),
                 );
               },
             ),
             _actionButton(
               context,
-              'Пользователи',
+              'Данные',
               Icons.people,
                   () {
-                // TODO: Навигация на страницу пользователей
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => DataViewerPage()));
               },
             ),
             _actionButton(

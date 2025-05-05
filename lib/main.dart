@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'pages/route_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stihl_mobile/pages/login_page.dart';
 
+import 'config/user_provider.dart';
 import 'theme/theme.dart';
+import 'config/route_page.dart'; // здесь логика маршрутов
 
 Future<void> main() async {
   await initializeDateFormatting('ru_RU', null);
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -16,16 +18,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'STIHL',
         theme: AppTheme.lightTheme.copyWith(
-        textTheme: GoogleFonts.mulishTextTheme(
-          Theme.of(context).textTheme,
+          textTheme: GoogleFonts.mulishTextTheme(
+            Theme.of(context).textTheme,
+          ),
         ),
-      ),
-        home: MyHomePage(),
-      );
-
+          initialRoute: '/login',
+    routes: {
+    '/login': (context) => const LoginScreen(),
+    '/home': (context) => MyHomePage(), // отдельная страница маршрутов
+    },
+    ),
+    );
   }
 }
