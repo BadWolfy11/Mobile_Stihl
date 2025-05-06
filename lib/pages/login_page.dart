@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorText;
+  bool _showPassword = false;
 
   void _login() {
     final email = _emailController.text.trim();
@@ -59,20 +60,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Фоновое изображение
           Positioned.fill(
             child: Image.asset(
               'assets/background.png',
               fit: BoxFit.cover,
             ),
           ),
-
-          // Затемняющий слой
           Positioned.fill(
             child: Container(color: Colors.black.withOpacity(0.3)),
           ),
-
-          // Контент авторизации
           GestureDetector(
             onTap: () => FocusScope.of(context).unfocus(),
             child: Center(
@@ -88,8 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 60,
                           fit: BoxFit.contain,
                         ),
-                        SizedBox(width: 80),
-                        Text(
+                        const SizedBox(height: 16),
+                        const Text(
                           'Авторизация',
                           style: TextStyle(
                             fontSize: 24,
@@ -99,15 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                     SizedBox(height: 32),
-
+                    const SizedBox(height: 32),
                     if (_errorText != null)
                       Text(
                         _errorText!,
                         style: const TextStyle(color: Colors.redAccent),
                       ),
-                    SizedBox(height: 16),
-
+                    const SizedBox(height: 16),
                     Form(
                       key: _formKey,
                       child: Column(
@@ -121,10 +115,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildTextField(
                             controller: _passwordController,
                             label: 'Пароль',
-                            obscureText: true,
+                            obscureText: !_showPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showPassword ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
+                            ),
                           ),
                           const SizedBox(height: 24),
-
                           SizedBox(
                             width: double.infinity,
                             height: 48,
@@ -146,8 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? const CircularProgressIndicator(
                                 color: Colors.white,
                               )
-                                  : const Text('Войти',
-                                  style: TextStyle(fontSize: 16)),
+                                  : const Text('Войти', style: TextStyle(fontSize: 16)),
                             ),
                           ),
                         ],
@@ -168,6 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -179,8 +183,17 @@ class _LoginScreenState extends State<LoginScreen> {
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.white.withOpacity(0.2),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.orange, width: 2),
         ),
       ),
       validator: (value) =>

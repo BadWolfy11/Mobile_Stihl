@@ -10,9 +10,7 @@ import 'scanner/scan_Page.dart';
 import 'profile/profile_page.dart';
 import 'profile/models.dart';
 
-
 class MainPage extends StatefulWidget {
-
   const MainPage({super.key});
 
   @override
@@ -29,20 +27,23 @@ class _MainPageState extends State<MainPage> {
         children: [
           RichText(
             text: TextSpan(
-              style: const TextStyle(fontSize: 22, color: Colors.black),
+              style: const TextStyle(fontSize: 22, color: Colors.white),
               children: [
                 const TextSpan(
-                  text: 'Добро ',
-                  style: TextStyle(color: LightColor.orange),
+                  text: 'Добро пожаловать, ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                TextSpan(text: 'пожаловать, $name!'),
+                TextSpan(
+                  text: ' $name!',
+                  style: const TextStyle(color: LightColor.orange, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 4),
           Text(
             'Сегодня: $today',
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            style: const TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
       ),
@@ -125,7 +126,7 @@ class _MainPageState extends State<MainPage> {
       Future.microtask(() {
         Navigator.pushReplacementNamed(context, '/login');
       });
-      return const SizedBox.shrink(); // пустая заглушка на момент перехода
+      return const SizedBox.shrink();
     }
 
     final user = users.firstWhere((u) => u['id'] == userId);
@@ -133,27 +134,45 @@ class _MainPageState extends State<MainPage> {
 
     return Scaffold(
       backgroundColor: LightColor.background,
-      appBar: AppBar(
-        backgroundColor: LightColor.background,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Главная',
-              style: TextStyle(fontSize: 24, color: LightColor.black),
-            ),
-            _avatarInAppBar(context, user),
-          ],
-        ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _greeting(person['name']),
+            Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 40, bottom: 20),
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/main_background.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Главная',
+                              style: TextStyle(fontSize: 24, color: Colors.white),
+                            ),
+                            _avatarInAppBar(context, user),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _greeting(person['name']),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             _actionButton(
               context,
               'Открыть камеру',
@@ -170,7 +189,10 @@ class _MainPageState extends State<MainPage> {
               'Данные',
               Icons.people,
                   () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => DataViewerPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => DataViewerPage()),
+                );
               },
             ),
             _actionButton(
