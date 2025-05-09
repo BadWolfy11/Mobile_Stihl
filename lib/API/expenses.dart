@@ -36,4 +36,22 @@ class ExpensesService {
   }
 
 
+  Future<bool> createExpense(Map<String, dynamic> data) async {
+    final response = await _api.request(
+      RequestMethod.post,
+      '/expenses/create',
+      data: data,
+    );
+    return response.status == 201 || response.status == 200;
+  }
+
+  Future<bool> updateExpense(int id, Map<String, dynamic> data) async {
+    final response = await _api.request(
+      RequestMethod.patch,
+      '/expenses/update/$id',
+      data: data,
+    );
+    return response.status == 200;
+  }
+
 }

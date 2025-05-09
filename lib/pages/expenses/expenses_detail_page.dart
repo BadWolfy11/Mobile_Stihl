@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/light_color.dart';
 import '../../theme/theme.dart';
 import '../../widgets/title_text.dart';
+import 'expense_actions.dart';
 import 'expenses_dialog.dart';
 
 class ExpensesDetailPage extends StatelessWidget {
@@ -11,13 +12,14 @@ class ExpensesDetailPage extends StatelessWidget {
 
 
   Widget _iconSection() {
+    print(expense);
     return Container(
       width: double.infinity,
       height: 200,
       color: Colors.grey[100],
       child: Center(
         child: Icon(
-          expense['icon'] ?? Icons.money_off,
+          expense['attachments'] == null ? IconData(int.parse(expense['attachments']), fontFamily: 'MaterialIcons') : Icons.money_off,
           size: 100,
           color: LightColor.lightGrey,
         ),
@@ -86,32 +88,6 @@ class ExpensesDetailPage extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Удалить расход"),
-        content: Text("Вы уверены, что хотите удалить этот расход?"),
-        actions: [
-          TextButton(
-            child: Text("Отмена"),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text("Удалить"),
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Расход удалён (демо)')),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,9 +132,14 @@ class ExpensesDetailPage extends StatelessWidget {
                 ),
                 icon: Icon(Icons.delete, color: Colors.white),
                 label: Text('Удалить', style: TextStyle(color: Colors.white)),
-                onPressed: () => _showDeleteConfirmation(context),
+                onPressed: () => showDeleteExpenseDialog(context, expense['id'], () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Расход удален')),
+                  );
+                  },
               ),
             ),
+            )
           ],
         ),
       ),

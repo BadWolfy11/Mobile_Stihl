@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../API/expenses.dart';
+import '../../API/expense_categories.dart';
+import '../../config/user_provider.dart';
 
 class ExpensesDialog extends StatefulWidget {
   final Map<String, dynamic>? expense;
@@ -17,10 +22,10 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
   final _amountController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
-  String _selectedCategory = 'Категория 1';
+  String? _selectedCategoryName;
   IconData _selectedIcon = Icons.shopping_cart;
 
-  final List<String> _categories = ['Категория 1', 'Категория 2', 'Категория 3'];
+  List<Map<String, dynamic>> _categories = [];
   final List<IconData> _iconOptions = [
     Icons.shopping_cart,
     Icons.restaurant,
@@ -36,17 +41,30 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
   @override
   void initState() {
     super.initState();
-    if (widget.expense != null) {
-      final e = widget.expense!;
-      _titleController.text = e['name'] ?? '';
-      _descController.text = e['description'] ?? '';
-      _amountController.text = e['amount']?.toString() ?? '';
-      _selectedCategory = e['category'] ?? _selectedCategory;
-      _selectedDate = e['date'] != null ? DateTime.parse(e['date']) : _selectedDate;
-      if (e['icon'] != null) {
-        _selectedIcon = IconData(e['icon'], fontFamily: 'MaterialIcons');
+    _loadCategories().then((_) {
+      if (widget.expense != null) {
+        final e = widget.expense!;
+        print(e);
+        _titleController.text = e['name'] ?? '';
+        _descController.text = e['description'] ?? '';
+        _amountController.text = e['amount']?.toString() ?? '';
+        _selectedCategoryName = e['category'];
+        _selectedDate = e['date'] != null ? DateTime.parse(e['date']) : _selectedDate;
+        if (e['attachments'] != null) {
+          _selectedIcon = IconData(int.parse(e['attachments']), fontFamily: 'MaterialIcons');
+        }
+      } else {
+        _selectedCategoryName = _categories.isNotEmpty ? _categories.first['name'] : null;
       }
-    }
+      setState(() {});
+    });
+  }
+
+  Future<void> _loadCategories() async {
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+    final service = ExpenseCategoriesService(token: token);
+    _categories = await service.getExpenseCategories();
   }
 
   Future<void> _pickDate() async {
@@ -61,27 +79,44 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
     }
   }
 
-  void _save() {
-    if (_formKey.currentState!.validate()) {
-      final newExpense = {
-        'name': _titleController.text,
-        'description': _descController.text,
-        'amount': double.tryParse(_amountController.text) ?? 0.0,
-        'category': _selectedCategory,
-        'date': _selectedDate.toIso8601String(),
-        'icon': _selectedIcon.codePoint,
-      };
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      Navigator.of(context).pop(newExpense);
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final category = _categories.firstWhere(
+          (c) => c['name'] == _selectedCategoryName,
+      orElse: () => {'id': null},
+    );
+
+    final data = {
+      'name': _titleController.text,
+      'description': _descController.text,
+      'amount': int.tryParse(_amountController.text) ?? 0,
+      'data': _selectedDate.toIso8601String(),
+      'expense_category_id': category['id'],
+      'attachments': _selectedIcon.codePoint.toString(),
+    };
+
+    final service = ExpensesService(token: token);
+    bool success;
+
+    if (widget.expense == null) {
+      success = await service.createExpense(data);
+    } else {
+      success = await service.updateExpense(widget.expense!['id'], data);
+    }
+
+    if (success) {
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.expense == null
-              ? 'Расход добавлен (демо)'
-              : 'Расход обновлён (демо)'),
-        ),
+        SnackBar(content: Text(widget.expense == null ? 'Расход добавлен' : 'Расход обновлён')),
       );
-
-
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ошибка при сохранении')),
+      );
     }
   }
 
@@ -89,17 +124,18 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.expense == null ? 'Добавить расход' : 'Редактировать расход'),
-      content: Form(
+      content: _categories.isEmpty
+          ? const CircularProgressIndicator()
+          : Form(
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Название'),
-                validator: (value) => value == null || value.isEmpty ? 'Введите название' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Введите название' : null,
               ),
               TextFormField(
                 controller: _descController,
@@ -109,43 +145,43 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Сумма'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Введите сумму' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Введите сумму' : null,
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                value: _selectedCategoryName,
                 items: _categories
-                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .map<DropdownMenuItem<String>>(
+                      (cat) => DropdownMenuItem<String>(
+                    value: cat['name'] as String,
+                    child: Text(cat['name']),
+                  ),
+                )
                     .toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value!),
+
+                onChanged: (value) => setState(() => _selectedCategoryName = value!),
                 decoration: const InputDecoration(labelText: 'Категория'),
               ),
               const SizedBox(height: 10),
               Text('Дата: ${DateFormat('dd.MM.yyyy').format(_selectedDate)}'),
-              TextButton(
-                onPressed: _pickDate,
-                child: const Text('Выбрать дату'),
-              ),
+              TextButton(onPressed: _pickDate, child: const Text('Выбрать дату')),
               const SizedBox(height: 10),
               const Text('Выберите иконку:'),
               Wrap(
                 spacing: 10,
-                runSpacing: 10,
-                children: _iconOptions.map((iconData) {
-                  final isSelected = _selectedIcon == iconData;
+                children: _iconOptions.map((icon) {
+                  final selected = icon == _selectedIcon;
                   return GestureDetector(
-                    onTap: () => setState(() => _selectedIcon = iconData),
+                    onTap: () => setState(() => _selectedIcon = icon),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.orange.shade100 : Colors.grey.shade200,
+                        color: selected ? Colors.orange.shade100 : Colors.grey.shade200,
                         border: Border.all(
-                          color: isSelected ? Colors.orange : Colors.transparent,
-                          width: 2,
-                        ),
+                            color: selected ? Colors.orange : Colors.transparent, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(iconData, size: 28, color: Colors.orange),
+                      child: Icon(icon, color: Colors.orange),
                     ),
                   );
                 }).toList(),
@@ -155,21 +191,14 @@ class _ExpensesDialogState extends State<ExpensesDialog> {
         ),
       ),
       actions: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-              ),
-              onPressed: _save, // твоя логика сохранения
-              child: const Text('Сохранить'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена'),
-            ),
-          ],
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          onPressed: _save,
+          child: const Text('Сохранить'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Отмена'),
         ),
       ],
     );

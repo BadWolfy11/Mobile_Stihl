@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:stihl_mobile/theme/light_color.dart';
 
 import '../../API/expenses.dart';
+import '../../API/expense_categories.dart';
 import '../../config/user_provider.dart';
 import '../../widgets/pagination_bar.dart';
 import '../../widgets/search_filter.dart';
@@ -20,16 +20,28 @@ class _ExpensesPageState extends State<ExpensesPage> {
   int _currentPage = 1;
   final int _itemsPerPage = 20;
   String _searchQuery = '';
-  String? _selectedCategory;
+  String? _selectedCategoryName;
 
   List<Map<String, dynamic>> _expenses = [];
+  List<Map<String, dynamic>> _categories = [];
   int _totalCount = 0;
-
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
+    _loadCategoriesAndExpenses();
+  }
+
+  Future<void> _loadCategoriesAndExpenses() async {
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final expensesCategories = ExpenseCategoriesService(token: token);
+
+    final fetchedCategories = await expensesCategories.getExpenseCategories();
+    _categories = [{'id': null, 'name': 'Все'}, ...fetchedCategories];
+
+    await _loadExpenses();
   }
 
   Future<void> _loadExpenses() async {
@@ -39,11 +51,14 @@ class _ExpensesPageState extends State<ExpensesPage> {
     final service = ExpensesService(token: token);
     final offset = (_currentPage - 1) * _itemsPerPage;
 
+    final selectedCategory = _categories.firstWhere(
+          (c) => c['name'] == _selectedCategoryName,
+      orElse: () => {'id': null},
+    );
+
     final data = await service.searchExpenses(
       name: _searchQuery,
-      categoryId: _selectedCategory != null && _selectedCategory != 'Все'
-          ? int.tryParse(_selectedCategory!)
-          : null,
+      categoryId: selectedCategory['id'],
       limit: _itemsPerPage,
       offset: offset,
     );
@@ -54,12 +69,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
     });
   }
 
-
-
-
   int get _totalPages => (_totalCount / _itemsPerPage).ceil();
-  List<Map<String, dynamic>> get _filteredExpenses => _expenses;
-
 
   void _previousPage() {
     if (_currentPage > 1) {
@@ -93,16 +103,11 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedExpenses = _filteredExpenses;
-
+    final displayedExpenses = _expenses;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Прочие затраты', style: TextStyle(fontSize: 24)),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Column(
         children: [
@@ -112,22 +117,24 @@ class _ExpensesPageState extends State<ExpensesPage> {
                 _searchQuery = query;
                 _currentPage = 1;
               });
+              _loadExpenses();
             },
-            onFilterSelected: (selectedCategory) {
+            onFilterSelected: (categoryName) {
               setState(() {
-                _selectedCategory = selectedCategory;
+                _selectedCategoryName = categoryName;
                 _currentPage = 1;
               });
+              _loadExpenses();
             },
-            categories: ['Все', 'Категория 1', 'Категория 2', 'Категория 3'],
+            categories: _categories.map((c) => c['name'].toString()).toList(),
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _expenses.length,
+              itemCount: displayedExpenses.length,
               itemBuilder: (context, index) {
                 return ExpensesCard(
-                  expense: _expenses[index],
-                  onTap: () => _showExpenseDetail(_expenses[index]),
+                  expense: displayedExpenses[index],
+                  onTap: () => _showExpenseDetail(displayedExpenses[index]),
                 );
               },
             ),

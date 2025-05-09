@@ -14,7 +14,10 @@ class ExpensesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    IconData iconData = _getIconData(expense['icon']);
+    print(expense['name']);
+    print(expense['attachments']);
+    IconData iconData = expense['attachments'] != null ? IconData(int.parse(expense['attachments']), fontFamily: 'MaterialIcons') : Icons.money_off;
+    //_getIconData(expense['attachments']);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -86,7 +89,7 @@ class ExpensesCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Категория: ${expense['category'] ?? 'Не указано'}',
+                        'Категория: ${expense['expense_category_id'] ?? 'Не указано'}',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
