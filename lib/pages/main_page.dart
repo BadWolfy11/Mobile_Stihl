@@ -8,7 +8,7 @@ import '../theme/theme.dart';
 import 'all_info/data_viewer_page.dart';
 import 'scanner/scan_Page.dart';
 import 'profile/profile_page.dart';
-import 'profile/models.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -53,7 +53,7 @@ class _MainPageState extends State<MainPage> {
   Route _slideFromLeftRoute(Map<String, dynamic> user) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          UserProfileScreen(user: user),
+          UserProfileScreen(),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(-1.0, 0.0);
         const end = Offset.zero;
@@ -65,10 +65,10 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _avatarInAppBar(BuildContext context, Map<String, dynamic> user) {
+  Widget _avatarInAppBar(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(_slideFromLeftRoute(user));
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => UserProfileScreen()));
       },
       child: Container(
         width: 40,
@@ -80,11 +80,6 @@ class _MainPageState extends State<MainPage> {
         child: const Icon(Icons.person, color: Colors.orange, size: 24),
       ),
     );
-  }
-
-  void _logout(BuildContext context) {
-    Provider.of<UserProvider>(context, listen: false).clearUser();
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   Widget _actionButton(
@@ -129,8 +124,7 @@ class _MainPageState extends State<MainPage> {
       return const SizedBox.shrink();
     }
 
-    final user = users.firstWhere((u) => u['id'] == userId);
-    final person = persons.firstWhere((p) => p['id'] == user['person_id']);
+    final userName = Provider.of<UserProvider>(context).userName ?? 'Пользователь';
 
     return Scaffold(
       backgroundColor: LightColor.background,
@@ -161,12 +155,12 @@ class _MainPageState extends State<MainPage> {
                               'Главная',
                               style: TextStyle(fontSize: 24, color: Colors.white),
                             ),
-                            _avatarInAppBar(context, user),
+                            _avatarInAppBar(context),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _greeting(person['name']),
+                      _greeting(userName),
                     ],
                   ),
                 ),

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../API/API.dart';
+import '../API/auth.dart';
+import '../API/persons.dart';
 import '../config/user_provider.dart';
 import 'main_page.dart';
 import 'profile/models.dart';
@@ -22,8 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _errorText;
   bool _showPassword = false;
 
-  void _login() {
-    final email = _emailController.text.trim();
+  void _login() async {
+    final login = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     setState(() {
@@ -31,29 +34,47 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorText = null;
     });
 
-    final user = users.firstWhere(
-          (u) {
-        final person = persons.firstWhere((p) => p['id'] == u['person_id']);
-        return person['email'] == email && u['password'] == password;
-      },
-      orElse: () => {},
-    );
+    try {
+      final auth = AuthService();
+      final result = await auth.login(login, password);
 
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => _isLoading = false);
-      if (user.isNotEmpty) {
-        Provider.of<UserProvider>(context, listen: false).setUserId(user['id']);
+      if (result != null) {
+        final token = result['access_token'];
+        final personId = result['person_id'];
+
+        final personService = PersonService(token: token);
+        final person = await personService.getPersonById(personId);
+
+        if (person != null) {
+          await Provider.of<UserProvider>(context, listen: false).setUserInfo(
+            userId: result['user_id'],
+            token: token,
+            name: person['name'],
+            lastName: person['last_name'],
+            email: person['email'],
+            phone: person['phone'],
+          );
+        }
+
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => MyHomePage()),
         );
       } else {
         setState(() {
-          _errorText = 'Неверный email или пароль';
+          _errorText = 'Неверный логин или пароль';
         });
       }
-    });
+    } catch (e) {
+      setState(() {
+        _errorText = 'Ошибка подключения: $e';
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -96,64 +117,85 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    if (_errorText != null)
-                      Text(
-                        _errorText!,
-                        style: const TextStyle(color: Colors.redAccent),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    const SizedBox(height: 16),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildTextField(
-                            controller: _emailController,
-                            label: 'Email',
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextField(
-                            controller: _passwordController,
-                            label: 'Пароль',
-                            obscureText: !_showPassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showPassword ? Icons.visibility_off : Icons.visibility,
-                                color: Colors.white70,
+                      elevation: 8,
+                      color: Colors.white.withOpacity(0.95),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              if (_errorText != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    _errorText!,
+                                    style: const TextStyle(
+                                        color: Colors.redAccent),
+                                  ),
+                                ),
+                              _buildTextField(
+                                controller: _emailController,
+                                label: 'Email',
+                                keyboardType: TextInputType.emailAddress,
+                                isDark: false,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _showPassword = !_showPassword;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _passwordController,
+                                label: 'Пароль',
+                                obscureText: !_showPassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showPassword = !_showPassword;
+                                    });
+                                  },
+                                ),
+                                isDark: false,
+                              ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: _isLoading
+                                      ? null
+                                      : () {
+                                    if (_formKey.currentState!
+                                        .validate()) {
+                                      _login();
+                                    }
+                                  },
+                                  child: _isLoading
+                                      ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                      : const Text(
+                                    'Войти',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
                                 ),
                               ),
-                              onPressed: _isLoading
-                                  ? null
-                                  : () {
-                                if (_formKey.currentState!.validate()) {
-                                  _login();
-                                }
-                              },
-                              child: _isLoading
-                                  ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                                  : const Text('Войти', style: TextStyle(fontSize: 16)),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -172,24 +214,22 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     Widget? suffixIcon,
+    bool isDark = true,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
+        labelStyle:
+        TextStyle(color: isDark ? Colors.white70 : Colors.black54),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.2),
+        fillColor: isDark ? Colors.white.withOpacity(0.2) : Colors.grey[100],
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.orange),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

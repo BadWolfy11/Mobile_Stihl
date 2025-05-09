@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'expense_actions.dart';
 import 'expenses_dialog.dart';
 
 class ExpensesCard extends StatelessWidget {
@@ -105,7 +106,11 @@ class ExpensesCard extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _showDeleteDialog(context),
+                onPressed: () => showDeleteExpenseDialog(context, expense['id'], () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Расход удален')),
+                  );
+                }),
               ),
             ],
           ),
@@ -121,30 +126,6 @@ class ExpensesCard extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удалить расход'),
-        content: const Text('Вы уверены, что хотите удалить этот расход?'),
-        actions: [
-          TextButton(
-            child: const Text('Отмена'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          TextButton(
-            child: const Text('Удалить'),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Расход удален (демо)')),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // Преобразуем строку в иконку
   IconData _getIconData(String? iconName) {

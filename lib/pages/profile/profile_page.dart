@@ -2,38 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/user_provider.dart';
 import '../../theme/light_color.dart';
-import 'models.dart';
-
 
 class UserProfileScreen extends StatelessWidget {
-  final Map<String, dynamic> user;
-
-  const UserProfileScreen({super.key, required this.user});
+  const UserProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final person = persons.firstWhere((p) => p['id'] == user['person_id']);
-    final address = addresses.firstWhere((a) => a['id'] == person['address_id']);
-    final document = documents.firstWhere((d) => d['person_id'] == person['id']);
-    final docType = documentTypes.firstWhere((t) => t['id'] == document['type_id']);
+    final userName = Provider.of<UserProvider>(context).userName ?? 'Пользователь';
+    final userLastName = Provider.of<UserProvider>(context).userLastName ?? '-';
+    final userEmail = Provider.of<UserProvider>(context).userEmail ?? '-';
+    final userPhone = Provider.of<UserProvider>(context).userPhone ?? '-';
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // Верхняя квадратная аватарка (с заглушкой)
+            // Простая иконка вместо изображения профиля
             Container(
               width: double.infinity,
               height: 200,
-              child: Image.asset(
-                'assets/images/profile.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.person, size: 100, color: Colors.grey),
-                ),
-              ),
+              alignment: Alignment.center,
+              color: Colors.grey[200],
+              child: const Icon(Icons.person, size: 100, color: Colors.grey),
             ),
 
             const SizedBox(height: 16),
@@ -74,15 +65,10 @@ class UserProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _infoRow('ФИО', '${person['name']} ${person['last_name']}'),
-                    _infoRow('Email', person['email']),
-                    _infoRow('Телефон', person['phone']),
-                    _infoRow('Город', address['city']),
-                    _infoRow('Улица', address['street']),
-                    _infoRow('Квартира', address['appartment']),
-                    _infoRow('Паспорт', document['name']),
-                    _infoRow('Тип документа', docType['name']),
-                    _infoRow('Дата выдачи', document['data']),
+                    _infoRow('Имя', userName),
+                    _infoRow('Фамилия', userLastName),
+                    _infoRow('Email', userEmail),
+                    _infoRow('Телефон', userPhone),
                   ],
                 ),
               ),
@@ -97,9 +83,8 @@ class UserProfileScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Логика выхода
-                    Provider.of<UserProvider>(context, listen: false).clearUser(); // очищаем userId
-                    Navigator.pushReplacementNamed(context, '/login'); // переход на логин
+                    Provider.of<UserProvider>(context, listen: false).clearUser();
+                    Navigator.pushReplacementNamed(context, '/login');
                   },
                   icon: const Icon(Icons.exit_to_app, color: Colors.white),
                   label: const Text(

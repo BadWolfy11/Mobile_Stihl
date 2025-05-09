@@ -1,6 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import '../../API/goods.dart';
+import '../../config/user_provider.dart';
 
 class GoodsDialog extends StatefulWidget {
   final int? itemId;
@@ -23,6 +27,7 @@ class _GoodsDialogState extends State<GoodsDialog> {
   void initState() {
     super.initState();
     if (widget.itemId != null) {
+      // Для реального случая — загрузить данные из API
       _nameController.text = 'Товар ${widget.itemId}';
       _descriptionController.text = 'Описание товара ${widget.itemId}';
       _barcodeController.text = '460${1000000000 + (widget.itemId! - 1)}';
@@ -45,6 +50,70 @@ class _GoodsDialogState extends State<GoodsDialog> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
+    }
+  }
+
+  Future<String?> _saveImageLocally(File imageFile) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final productsDir = Directory('${appDir.path}/products');
+    if (!await productsDir.exists()) {
+      await productsDir.create(recursive: true);
+    }
+
+    final fileName = imageFile.path.split('/').last;
+    final localPath = '${productsDir.path}/$fileName';
+    final savedImage = await imageFile.copy(localPath);
+    return 'assets/images/products/$fileName'; // путь для записи в БД
+  }
+
+
+  Future<void> _saveForm() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final service = GoodsService(token: token);
+
+    final name = _nameController.text;
+    // final category_id = _catego
+    final description = _descriptionController.text;
+    final barcode = _barcodeController.text;
+    final stock = int.tryParse(_stockController.text) ?? 0;
+    String? imagePath;
+
+    if (_selectedImage != null) {
+      imagePath = await _saveImageLocally(_selectedImage!);
+    }
+
+    final data = {
+      'name': name,
+      // 'category_id': ,
+      'description': description,
+      // 'price': ,
+      'barcode': barcode,
+      'stock': stock,
+      if (imagePath != null) 'attachments': imagePath,
+    };
+
+    bool success = false;
+    if (widget.itemId == null) {
+      final response = await service.createGoods(data);
+      success = response;
+    } else {
+      final response = await service.updateGoods(widget.itemId!, data);
+      success = response;
+    }
+
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(widget.itemId == null ? 'Товар добавлен' : 'Товар обновлен')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при сохранении товара')),
+      );
     }
   }
 
@@ -110,28 +179,5 @@ class _GoodsDialogState extends State<GoodsDialog> {
         ),
       ),
     );
-  }
-
-  void _saveForm() {
-    if (_formKey.currentState!.validate()) {
-      final name = _nameController.text;
-      final description = _descriptionController.text;
-      final barcode = _barcodeController.text;
-      final stock = int.tryParse(_stockController.text) ?? 0;
-      final imagePath = _selectedImage?.path;
-
-      // Здесь можно добавить сохранение данных в базу или список
-
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(widget.itemId == null
-              ? 'Товар добавлен (демо)'
-              : 'Товар обновлен (демо)'),
-        ),
-      );
-
-      print("Сохранено: $name, $barcode, $stock, $imagePath");
-    }
   }
 }

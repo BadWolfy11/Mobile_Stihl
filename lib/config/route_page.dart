@@ -4,7 +4,6 @@ import 'package:stihl_mobile/pages/main_page.dart';
 
 import '../widgets/BottomNavigationBar/bottom_navigation_bar.dart';
 import '../pages/expenses/expenses_page.dart';
-import '../pages/expenses_page.dart';
 
 
 class MyHomePage extends StatefulWidget {
@@ -23,8 +22,6 @@ class _MyHomePageState extends State<MyHomePage> {
     switch (selectedIndex) {
       case 0:
         page = MainPage();
-
-
         break;
       case 1:
         page = GoodsPage();

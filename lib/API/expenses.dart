@@ -1,0 +1,39 @@
+import '../API/API.dart';
+
+class ExpensesService {
+  final API _api;
+
+  ExpensesService({required String token}) : _api = API(token: token);
+
+  Future<Map<String, dynamic>> searchExpenses({
+    String? name,
+    int? categoryId,
+    required int limit,
+    required int offset,
+  }) async {
+    final params = {
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+    if (name != null && name.isNotEmpty) params['name'] = name;
+    if (categoryId != null) params['expense_category_id'] = categoryId.toString();
+
+    final response = await _api.request(RequestMethod.get, '/expenses/search', params: params);
+
+    if (response.status == 200 && response.body is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(response.body);
+    }
+
+    return {'items': [], 'totalCount': 0};
+  }
+
+  Future<bool> deleteExpense(int id) async {
+    final response = await _api.request(
+      RequestMethod.delete,
+      '/expenses/delete/$id',
+    );
+    return response.status == 200;
+  }
+
+
+}

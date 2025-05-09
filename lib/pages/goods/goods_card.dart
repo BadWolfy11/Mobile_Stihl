@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'good_actions.dart';
 import 'goods_dialog.dart';
 
 class GoodsCard extends StatelessWidget {
@@ -35,7 +36,7 @@ class GoodsCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
-                    goods['image'],
+                    goods['attachments'] ?? 'assets/background.png',
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
@@ -108,7 +109,7 @@ class GoodsCard extends StatelessWidget {
                     ),
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _showDeleteDialog(context),
+                        onPressed: () => showDeleteGoodsDialog(context, goods['id'], () {}),
                     ),
                   ],
                 ),
@@ -128,27 +129,3 @@ void _showEditDialog(BuildContext context, int id) {
   );
 }
 
-void _showDeleteDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Подтвердить удаление'),
-      content: Text('Вы точно хотите удалить этот товар?'),
-      actions: [
-        TextButton(
-          child: Text('Отмена'),
-          onPressed: () => Navigator.pop(context),
-        ),
-        TextButton(
-          child: Text('Удалить', style: TextStyle(color: Colors.white)),
-          onPressed: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Товар удален (демо)')),
-            );
-          },
-        ),
-      ],
-    ),
-  );
-}

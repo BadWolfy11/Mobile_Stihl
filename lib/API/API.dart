@@ -48,7 +48,8 @@ class API {
   final String baseUrl;
   final String? token;
 
-  API({this.token, this.baseUrl = 'http://127.0.0.1:8000'});
+  // API({this.token, this.baseUrl = 'https://backend.academytop.ru/api'}); // If need open to public
+  API({this.token, this.baseUrl = 'http://192.168.72.130:8000/api'}); // Change to computer IP, if connecting from mobile/emulator.
 
   Future<APIResponse> request(
       RequestMethod method,
@@ -67,6 +68,10 @@ class API {
         final requestHeaders = Map<String, String>.from(headers);
         if (token != null) {
           requestHeaders['Authorization'] = 'Bearer $token';
+        }
+
+        if (data is Map) {
+          requestHeaders['Content-Type'] = 'application/json';
         }
 
         http.Response response;

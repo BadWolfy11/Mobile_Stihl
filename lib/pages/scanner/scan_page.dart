@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
+import 'package:provider/provider.dart';
 
-class Product {
-  final String code;
-  final String name;
-  final String? description;
-
-  Product({required this.code, required this.name, this.description});
-}
+import '../../API/goods.dart';
+import '../../config/user_provider.dart';
+import '../goods/product_detail_page.dart';
 
 class ScanScreen extends StatefulWidget {
   @override
@@ -18,18 +15,48 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanState extends State<ScanScreen> {
   String scanResult = "Наведите камеру на код";
-  String productName = "";
-  List<Product> products = [
-    Product(code: "4601234567890", name: "Молоко Простоквашино 1л"),
-    Product(code: "4609876543210", name: "Хлеб Бородинский"),
-    Product(code: "890123456789", name: "Чай Greenfield Classic"),
-    Product(code: "HG620099109993J000P00000", name: "Акция: 2 пиццы по цене 1"),
-  ];
+  Map<String, dynamic>? foundProduct;
+  bool isSearching = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => scan());
+  }
+
+  Future<void> scan() async {
+    setState(() {
+      isSearching = true;
+      foundProduct = null;
+      scanResult = "Наведите камеру на код";
+    });
+
+    try {
+      final result = await BarcodeScanner.scan();
+      final barcode = result.rawContent;
+
+      scanResult = barcode.isEmpty ? "Сканирование отменено" : barcode;
+
+      final token = Provider.of<UserProvider>(context, listen: false).token;
+      if (token != null && barcode.isNotEmpty) {
+        final service = GoodsService(token: token);
+        final results = await service.searchGoods(barcode: barcode);
+
+        if (results.isNotEmpty) {
+          setState(() {
+            foundProduct = results.first;
+            isSearching = false;
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      scanResult = "Ошибка: $e";
+    }
+
+    setState(() {
+      isSearching = false;
+    });
   }
 
   @override
@@ -38,77 +65,95 @@ class _ScanState extends State<ScanScreen> {
       appBar: AppBar(
         title: Text("Сканер товаров"),
         actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: scan,
-          )
+          IconButton(icon: Icon(Icons.refresh), onPressed: scan),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: isSearching
+          ? Center(child: CircularProgressIndicator())
+          : foundProduct == null
+          ? Center(child: Text(scanResult))
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 🖼 Картинка товара
+          Image.asset(
+            foundProduct!['attachments'] ?? '',
+            height: 250,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              height: 250,
+              color: Colors.grey[200],
+              child: Icon(Icons.broken_image, size: 100),
+            ),
+          ),
+
+          SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Штрихкод:", style: TextStyle(color: Colors.grey)),
+                Text(
+                  scanResult,
+                  style: TextStyle(fontSize: 18,),
+                ),
+                SizedBox(height: 12),
+                Text("Наименование:", style: TextStyle(color: Colors.grey)),
+                Text(
+                  foundProduct!['name'] ?? '',
+                  style: TextStyle(fontSize: 22,),
+                ),
+                SizedBox(height: 12),
+                Text("Цена:", style: TextStyle(color: Colors.grey)),
+                Text(
+                  "${foundProduct!['price']} ₽",
+                  style: TextStyle(fontSize: 20),
+                ),
+                SizedBox(height: 12),
+                Text("Остаток:", style: TextStyle(color: Colors.grey)),
+                Text(
+                  "${foundProduct!['stock']} шт.",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
           children: [
-            // Индикатор сканирования
-            if (scanResult == "Наведите камеру на код")
-              Column(
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text("Идёт поиск кода..."),
-                ],
-              ),
-
-            // Результаты
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text(
-                    "Считанный код:",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  Text(
-                    scanResult,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-
-            Divider(),
-
-            // Название товара
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text(
-                    "Найденный товар:",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  Text(
-                    productName.isNotEmpty ? productName : "Не найден",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: productName.isNotEmpty && productName != "Не найден"
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Кнопка повторного сканирования
-            Padding(
-              padding: EdgeInsets.all(20),
+            Expanded(
               child: ElevatedButton.icon(
-                icon: Icon(Icons.camera_alt),
-                label: Text("Сканировать снова"),
                 onPressed: scan,
+                icon: Icon(Icons.qr_code_scanner, color: Colors.white),
+                label: Text("Сканировать снова", style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: Colors.orange,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: foundProduct == null
+                    ? null
+                    : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailPage(productId: foundProduct!['id']),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.open_in_new, color: Colors.white),
+                label: Text("Открыть карточку", style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
@@ -116,54 +161,5 @@ class _ScanState extends State<ScanScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> scan() async {
-    setState(() {
-      scanResult = "Наведите камеру на код";
-      productName = "";
-    });
-
-    try {
-      final result = await BarcodeScanner.scan(
-        options: ScanOptions(
-          strings: {
-            'cancel': 'Отмена',
-            'flash_on': 'Вспышка вкл',
-            'flash_off': 'Вспышка выкл',
-          },
-          restrictFormat: [],
-          useCamera: -1,
-        ),
-      );
-
-      // Поиск товара в списке
-      Product? foundProduct;
-      for (var product in products) {
-        if (product.code == result.rawContent) {
-          foundProduct = product;
-          break;
-        }
-      }
-
-      setState(() {
-        scanResult = result.rawContent;
-        productName = foundProduct?.name ?? "Не найден";
-      });
-
-      // Вибрация при успешном сканировании
-      // HapticFeedback.vibrate();
-
-    } on PlatformException catch (e) {
-      setState(() {
-        scanResult = "Ошибка: ${e.message ?? "Нет доступа к камере"}";
-      });
-    } on FormatException {
-      // Пользователь закрыл сканер
-    } catch (e) {
-      setState(() {
-        scanResult = "Ошибка: $e";
-      });
-    }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SearchFilterWidget extends StatelessWidget {
+class SearchFilterWidget extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onFilterSelected;
   final List<String> categories;
@@ -13,9 +13,20 @@ class SearchFilterWidget extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    String selectedCategory = categories.first;
+  State<SearchFilterWidget> createState() => _SearchFilterWidgetState();
+}
 
+class _SearchFilterWidgetState extends State<SearchFilterWidget> {
+  late String selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedCategory = widget.categories.isNotEmpty ? widget.categories.first : 'Все';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(16.0),
       child: Column(
@@ -31,7 +42,7 @@ class SearchFilterWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: TextField(
-                    onChanged: onSearchChanged,
+                    onChanged: widget.onSearchChanged,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: "Поиск",
@@ -42,16 +53,18 @@ class SearchFilterWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               DropdownButton<String>(
                 value: selectedCategory,
                 onChanged: (value) {
                   if (value != null) {
-                    selectedCategory = value;
-                    onFilterSelected(value);
+                    setState(() {
+                      selectedCategory = value;
+                    });
+                    widget.onFilterSelected(value);
                   }
                 },
-                items: categories
+                items: widget.categories
                     .map((category) => DropdownMenuItem<String>(
                   value: category,
                   child: Text(category),
