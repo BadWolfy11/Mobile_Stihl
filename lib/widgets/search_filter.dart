@@ -4,12 +4,14 @@ class SearchFilterWidget extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onFilterSelected;
   final List<String> categories;
+  final bool needDropdown;
 
   const SearchFilterWidget({
     Key? key,
     required this.onSearchChanged,
     required this.onFilterSelected,
     required this.categories,
+    this.needDropdown = true, // значение по умолчанию
   }) : super(key: key);
 
   @override
@@ -22,7 +24,9 @@ class _SearchFilterWidgetState extends State<SearchFilterWidget> {
   @override
   void initState() {
     super.initState();
-    selectedCategory = widget.categories.isNotEmpty ? widget.categories.first : 'Все';
+    selectedCategory = widget.categories.isNotEmpty
+        ? widget.categories.first
+        : 'Все'; // можно заменить на '', если "Все" нет в списке
   }
 
   @override
@@ -43,7 +47,7 @@ class _SearchFilterWidgetState extends State<SearchFilterWidget> {
                   ),
                   child: TextField(
                     onChanged: widget.onSearchChanged,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: "Поиск",
                       hintStyle: TextStyle(fontSize: 12),
@@ -53,24 +57,25 @@ class _SearchFilterWidgetState extends State<SearchFilterWidget> {
                   ),
                 ),
               ),
-              const SizedBox(width: 20),
-              DropdownButton<String>(
-                value: selectedCategory,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedCategory = value;
-                    });
-                    widget.onFilterSelected(value);
-                  }
-                },
-                items: widget.categories
-                    .map((category) => DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category),
-                ))
-                    .toList(),
-              ),
+              SizedBox(width: (widget.needDropdown && widget.categories.isNotEmpty ? 20.0 : 0.0) ),
+              if (widget.needDropdown && widget.categories.isNotEmpty)
+                DropdownButton<String>(
+                  value: selectedCategory,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedCategory = value;
+                      });
+                      widget.onFilterSelected(value);
+                    }
+                  },
+                  items: widget.categories
+                      .map((category) => DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  ))
+                      .toList(),
+                ),
             ],
           ),
         ],

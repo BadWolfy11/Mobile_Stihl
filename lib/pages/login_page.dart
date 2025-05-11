@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
-import '../API/API.dart';
 import '../API/auth.dart';
 import '../API/persons.dart';
 import '../config/user_provider.dart';
-import 'main_page.dart';
-import 'profile/models.dart';
 import '../config/route_page.dart';
 
 class LoginScreen extends StatefulWidget {

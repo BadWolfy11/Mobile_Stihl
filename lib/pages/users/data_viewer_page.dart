@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:stihl_mobile/theme/light_color.dart';
-
-import '../profile/models.dart';
-import 'data_card.dart';
 import '../../widgets/search_filter.dart';
 import '../../widgets/pagination_bar.dart';
+import 'data_card.dart';
+import '../profile/models.dart';
+import 'data_detail_page.dart';
 
 class DataViewerPage extends StatefulWidget {
   @override
@@ -17,15 +16,10 @@ class _DataViewerPageState extends State<DataViewerPage> {
   int currentPage = 1;
   final int itemsPerPage = 10;
 
-  List<Map<String, dynamic>> get currentData =>
-      (allDataSources[selectedSource] ?? [])
-          .where((item) => item.entries.any((e) =>
-          e.value.toString().toLowerCase().contains(searchQuery.toLowerCase())))
-          .toList();
-
   final Map<String, List<Map<String, dynamic>>> allDataSources = {
     'users': users,
     'persons': persons,
+    'roles': roles,
     'addresses': addresses,
     'documents': documents,
     'documentTypes': documentTypes,
@@ -34,10 +28,17 @@ class _DataViewerPageState extends State<DataViewerPage> {
   final Map<String, String> dataTitles = {
     'users': 'Пользователи',
     'persons': 'Персоны',
+    'roles': 'Роли',
     'addresses': 'Адреса',
     'documents': 'Документы',
     'documentTypes': 'Типы документов',
   };
+
+  List<Map<String, dynamic>> get currentData =>
+      (allDataSources[selectedSource] ?? [])
+          .where((item) => item.entries.any((e) =>
+          e.value.toString().toLowerCase().contains(searchQuery.toLowerCase())))
+          .toList();
 
   int get totalPages => (currentData.length / itemsPerPage).ceil().clamp(1, 999);
 
@@ -49,10 +50,20 @@ class _DataViewerPageState extends State<DataViewerPage> {
     if (currentPage < totalPages) setState(() => currentPage++);
   }
 
-  void _showEditDialog(Map<String, dynamic> item) {
-    // TODO: реализовать диалог редактирования
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Редактирование элемента ID ${item['id']} (демо)')),
+  void _showDetail(Map<String, dynamic> user) {
+    final person = persons.firstWhere((p) => p['id'] == user['person_id'], orElse: () => {});
+    final role = roles.firstWhere((r) => r['id'] == user['role_id'], orElse: () => {});
+    final address = addresses.firstWhere((a) => a['id'] == person['address_id'], orElse: () => {});
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserDetailPage(
+          user: user,
+          person: person,
+          role: role,
+          address: address,
+        ),
+      ),
     );
   }
 
@@ -63,10 +74,7 @@ class _DataViewerPageState extends State<DataViewerPage> {
         title: Text('Подтвердить удаление'),
         content: Text('Вы точно хотите удалить элемент ID ${item['id']}?'),
         actions: [
-          TextButton(
-            child: Text('Отмена'),
-            onPressed: () => Navigator.pop(context),
-          ),
+          TextButton(child: Text('Отмена'), onPressed: () => Navigator.pop(context)),
           TextButton(
             child: Text('Удалить', style: TextStyle(color: Colors.red)),
             onPressed: () {
@@ -83,41 +91,15 @@ class _DataViewerPageState extends State<DataViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pagedData = currentData
-        .skip((currentPage - 1) * itemsPerPage)
-        .take(itemsPerPage)
-        .toList();
+    final pagedData = currentData.skip((currentPage - 1) * itemsPerPage).take(itemsPerPage).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(dataTitles[selectedSource] ?? 'Данные'),
+        title: Text('Просмотр данных'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          DropdownButton<String>(
-            value: selectedSource,
-            dropdownColor: Colors.white,
-            underline: SizedBox(),
-            icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  selectedSource = value;
-                  currentPage = 1;
-                });
-              }
-            },
-            items: allDataSources.keys.map((source) {
-              return DropdownMenuItem(
-                value: source,
-                child: Text(dataTitles[source] ?? source),
-              );
-            }).toList(),
-          ),
-          SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
@@ -128,8 +110,14 @@ class _DataViewerPageState extends State<DataViewerPage> {
                 currentPage = 1;
               });
             },
-            onFilterSelected: (value) {},
+            onFilterSelected: (value) {
+              setState(() {
+                selectedSource = value;
+                currentPage = 1;
+              });
+            },
             categories: allDataSources.keys.toList(),
+            needDropdown: false,
           ),
           Expanded(
             child: ListView.builder(
@@ -141,24 +129,17 @@ class _DataViewerPageState extends State<DataViewerPage> {
                     DataCard(
                       data: item,
                       title: dataTitles[selectedSource] ?? selectedSource,
-                      onTap: () {},
+                      onTap: selectedSource == 'users' ? () => _showDetail(item) : null,
                     ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.edit, color: Colors.orange),
-                            onPressed: () => _showEditDialog(item),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => _showDeleteDialog(item),
-                          ),
-                        ],
+                    if (selectedSource == 'users')
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _showDeleteDialog(item),
+                        ),
                       ),
-                    ),
                   ],
                 );
               },

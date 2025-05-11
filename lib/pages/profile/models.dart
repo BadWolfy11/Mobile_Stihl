@@ -1,61 +1,45 @@
-// Мок-данные для пользователей
-final List<Map<String, dynamic>> users = List.generate(
-  10, // Например, 10 пользователей
-      (index) => {
-    'id': index + 1,
-    'login': 'user${index + 1}',
-    'password': 'password${index + 1}',
-    'role_id': (index % 3) + 1, // Пример, создаем 3 роли
-    'person_id': index + 1, // Связь с таблицей person
-  },
-);
+final List<Map<String, dynamic>> users = [
+  {'id': 1, 'login': 'admin', 'password': '1234', 'role_id': 1, 'person_id': 1},
+  {'id': 2, 'login': 'user1', 'password': 'abcd', 'role_id': 2, 'person_id': 2},
+];
 
-// Мок-данные для персон
-final List<Map<String, dynamic>> persons = List.generate(
-  10, // 10 персон
-      (index) => {
-    'id': index + 1,
-    'name': 'Имя ${index + 1}',
-    'last_name': 'Фамилия ${index + 1}',
-    'address_id': index + 1, // Пример связи с таблицей address
-    'email': 'user${index + 1}@example.com',
-    'phone': '8${(index + 1).toString().padLeft(9, '0')}', // Например, телефон в формате "8XXXXXXXXX"
-    'notes': 'Примечание для пользователя ${index + 1}',
-  },
-);
-
-// Мок-данные для адресов
-final List<Map<String, dynamic>> addresses = List.generate(
-  10, // 10 адресов
-      (index) => {
-    'id': index + 1,
-    'city': 'Город ${index + 1}',
-    'street': 'Улица ${index + 1}',
-    'appartment': 'Квартира ${index + 1}',
-  },
-);
-
-// Мок-данные для документов (например, паспорта)
-final List<Map<String, dynamic>> documents = List.generate(
-  10, // 10 документов (паспортов)
-      (index) => {
-    'id': index + 1,
-    'type_id': 1, // Тип документа (например, паспорт)
-    'name': 'Паспорт ${index + 1}', // Название документа
-    'data': '2025-05-01', // Дата документа
-    'person_id': index + 1, // Связь с личной информацией
-  },
-);
-
-// Мок-данные для типов документов (например, паспорт)
-final List<Map<String, dynamic>> documentTypes = [
+final List<Map<String, dynamic>> persons = [
   {
     'id': 1,
-    'name': 'Паспорт',
+    'name': 'Иван',
+    'last_name': 'Иванов',
+    'address_id': 1,
+    'email': 'ivan@example.com',
+    'phone': '123456789',
+    'notes': 'Главный админ',
   },
   {
     'id': 2,
-    'name': 'Свидетельство о рождении',
+    'name': 'Мария',
+    'last_name': 'Петрова',
+    'address_id': 2,
+    'email': 'maria@example.com',
+    'phone': '987654321',
+    'notes': 'Обычный пользователь',
   },
-  // Другие типы документов можно добавить по необходимости
+];
+
+final List<Map<String, dynamic>> roles = [
+  {'id': 1, 'name': 'Администратор'},
+  {'id': 2, 'name': 'Пользователь'},
+];
+
+final List<Map<String, dynamic>> addresses = [
+  {'id': 1, 'street': 'Ленина', 'city': 'Москва', 'zip': '101000'},
+  {'id': 2, 'street': 'Мира', 'city': 'СПб', 'zip': '190000'},
+];
+
+final List<Map<String, dynamic>> documents = [
+  {'id': 1, 'type_id': 1, 'title': 'Паспорт', 'owner_id': 1},
+  {'id': 2, 'type_id': 2, 'title': 'ИНН', 'owner_id': 2},
+];
+
+final List<Map<String, dynamic>> documentTypes = [
+  {'id': 1, 'name': 'Паспорт'},
+  {'id': 2, 'name': 'ИНН'},
 ];

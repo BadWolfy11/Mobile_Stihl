@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:stihl_mobile/pages/users/data_viewer_page.dart';
 
 import '../config/user_provider.dart';
 import '../theme/light_color.dart';
 import '../theme/theme.dart';
-import 'all_info/data_viewer_page.dart';
 import 'scanner/scan_Page.dart';
 import 'profile/profile_page.dart';
 
