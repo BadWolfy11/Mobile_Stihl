@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../API/users.dart';
+import '../../API/persons.dart';
+import '../../API/address.dart';
+import '../../API/role.dart';
+import '../../config/user_provider.dart';
 import '../../widgets/search_filter.dart';
 import '../../widgets/pagination_bar.dart';
 import 'data_card.dart';
-import '../profile/models.dart';
 import 'data_detail_page.dart';
 
 class DataViewerPage extends StatefulWidget {
@@ -11,57 +17,89 @@ class DataViewerPage extends StatefulWidget {
 }
 
 class _DataViewerPageState extends State<DataViewerPage> {
-  String selectedSource = 'users';
   String searchQuery = '';
   int currentPage = 1;
   final int itemsPerPage = 10;
 
-  final Map<String, List<Map<String, dynamic>>> allDataSources = {
-    'users': users,
-    'persons': persons,
-    'roles': roles,
-    'addresses': addresses,
-    'documents': documents,
-    'documentTypes': documentTypes,
-  };
+  List<Map<String, dynamic>> _users = [];
+  int _totalCount = 0;
+  bool _isLoading = false;
 
-  final Map<String, String> dataTitles = {
-    'users': 'Пользователи',
-    'persons': 'Персоны',
-    'roles': 'Роли',
-    'addresses': 'Адреса',
-    'documents': 'Документы',
-    'documentTypes': 'Типы документов',
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-  List<Map<String, dynamic>> get currentData =>
-      (allDataSources[selectedSource] ?? [])
-          .where((item) => item.entries.any((e) =>
-          e.value.toString().toLowerCase().contains(searchQuery.toLowerCase())))
-          .toList();
+  Future<void> _loadData() async {
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
 
-  int get totalPages => (currentData.length / itemsPerPage).ceil().clamp(1, 999);
+    setState(() => _isLoading = true);
+
+    final userService = UserService(token: token);
+    final personService = PersonService(token: token);
+    final offset = (currentPage - 1) * itemsPerPage;
+    final data = await userService.searchUsers(
+      login: searchQuery,
+      offset: offset,
+      limit: itemsPerPage,
+    );
+
+    final users = List<Map<String, dynamic>>.from(data['items']);
+    _totalCount = data['totalCount'] ?? 0;
+
+    // Получение данных персоны для каждого пользователя
+    for (var user in users) {
+      final personId = user['person_id'];
+      if (personId != null) {
+        final person = await personService.getPersonById(personId);
+        user['person'] = person;
+      }
+    }
+
+    setState(() {
+      _users = users;
+      _isLoading = false;
+    });
+  }
+
+  int get totalPages => (_totalCount / itemsPerPage).ceil().clamp(1, 999);
 
   void _previousPage() {
-    if (currentPage > 1) setState(() => currentPage--);
+    if (currentPage > 1) {
+      setState(() => currentPage--);
+      _loadData();
+    }
   }
 
   void _nextPage() {
-    if (currentPage < totalPages) setState(() => currentPage++);
+    if (currentPage < totalPages) {
+      setState(() => currentPage++);
+      _loadData();
+    }
   }
 
-  void _showDetail(Map<String, dynamic> user) {
-    final person = persons.firstWhere((p) => p['id'] == user['person_id'], orElse: () => {});
-    final role = roles.firstWhere((r) => r['id'] == user['role_id'], orElse: () => {});
-    final address = addresses.firstWhere((a) => a['id'] == person['address_id'], orElse: () => {});
+  void _showDetail(Map<String, dynamic> user) async {
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final personService = PersonService(token: token);
+    final roleService = RoleService(token: token);
+    final addressService = AddressService(token: token);
+
+    final person = await personService.getPersonById(user['person_id']);
+    final role = await roleService.getRoleById(user['role_id']);
+    final address = person != null ? await addressService.getAddressById(person['address_id']) : {};
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => UserDetailPage(
-          user: user,
-          person: person,
-          role: role,
-          address: address,
+          user: Map<String, dynamic>.from(user),
+          person: Map<String, dynamic>.from(person!),
+          role: Map<String, dynamic>.from(role ?? {}),
+          address: Map<String, dynamic>.from(address ?? {}),
         ),
       ),
     );
@@ -72,7 +110,7 @@ class _DataViewerPageState extends State<DataViewerPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Подтвердить удаление'),
-        content: Text('Вы точно хотите удалить элемент ID ${item['id']}?'),
+        content: Text('Вы точно хотите удалить пользователя ID ${item['id']}?'),
         actions: [
           TextButton(child: Text('Отмена'), onPressed: () => Navigator.pop(context)),
           TextButton(
@@ -80,7 +118,7 @@ class _DataViewerPageState extends State<DataViewerPage> {
             onPressed: () {
               Navigator.pop(context);
               setState(() {
-                allDataSources[selectedSource]!.removeWhere((e) => e['id'] == item['id']);
+                _users.removeWhere((e) => e['id'] == item['id']);
               });
             },
           ),
@@ -91,11 +129,9 @@ class _DataViewerPageState extends State<DataViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pagedData = currentData.skip((currentPage - 1) * itemsPerPage).take(itemsPerPage).toList();
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Просмотр данных'),
+        title: Text('Просмотр пользователей'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -109,29 +145,32 @@ class _DataViewerPageState extends State<DataViewerPage> {
                 searchQuery = query;
                 currentPage = 1;
               });
+              _loadData();
             },
-            onFilterSelected: (value) {
-              setState(() {
-                selectedSource = value;
-                currentPage = 1;
-              });
-            },
-            categories: allDataSources.keys.toList(),
+            categories: const [],
             needDropdown: false,
+            onFilterSelected: (_) {},
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: pagedData.length,
-              itemBuilder: (context, index) {
-                final item = pagedData[index];
-                return Stack(
-                  children: [
-                    DataCard(
-                      data: item,
-                      title: dataTitles[selectedSource] ?? selectedSource,
-                      onTap: selectedSource == 'users' ? () => _showDetail(item) : null,
-                    ),
-                    if (selectedSource == 'users')
+          if (_isLoading)
+            const Expanded(child: Center(child: CircularProgressIndicator()))
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _users.length,
+                itemBuilder: (context, index) {
+                  final item = _users[index];
+                  return Stack(
+                    children: [
+                      DataCard(
+                        data: {
+                          'ID': item['id'],
+                          'Login': item['login'],
+                          'Имя': item['person']?['name'] ?? '',
+                          'Фамилия': item['person']?['last_name'] ?? '',
+                        },
+                        title: 'Пользователь',
+                        onTap: () => _showDetail(item),
+                      ),
                       Positioned(
                         top: 8,
                         right: 8,
@@ -140,11 +179,11 @@ class _DataViewerPageState extends State<DataViewerPage> {
                           onPressed: () => _showDeleteDialog(item),
                         ),
                       ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
           PaginationBar(
             currentPage: currentPage,
             totalPages: totalPages,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'data_dialog.dart'; // путь к форме редактирования пользователя
 
 class UserDetailPage extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -24,15 +25,29 @@ class UserDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text(title.toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.orange)),
             const SizedBox(height: 12),
             ...data.entries.map(
                   (entry) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 3, child: Text(entry.key, style: const TextStyle(color: Colors.grey))),
-                    Expanded(flex: 5, child: Text(entry.value.toString())),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        entry.key,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text(
+                        _formatValue(entry.value),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -42,6 +57,18 @@ class UserDetailPage extends StatelessWidget {
       ),
     );
   }
+
+  String _formatValue(dynamic value) {
+    if (value == null) return '-';
+    if (value is Map) {
+      return value.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+    }
+    if (value is List) {
+      return value.join(', ');
+    }
+    return value.toString();
+  }
+
 
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
@@ -71,6 +98,7 @@ class UserDetailPage extends StatelessWidget {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,12 +126,23 @@ class UserDetailPage extends StatelessWidget {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Логика редактирования
+                  showDialog(
+                    context: context,
+                    builder: (context) => UserEditDialog(
+                      userId: user['id'],
+                      user: user,
+                      person: person,
+                      address: address,
+                      role: role,
+
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.edit, color: Colors.white),
                 label: const Text("Редактировать", style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               ),
+
             ),
             const SizedBox(width: 16),
             ElevatedButton.icon(
