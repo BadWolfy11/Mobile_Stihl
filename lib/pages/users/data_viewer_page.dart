@@ -10,6 +10,7 @@ import '../../widgets/search_filter.dart';
 import '../../widgets/pagination_bar.dart';
 import 'data_card.dart';
 import 'data_detail_page.dart';
+import 'data_dialog.dart';
 
 class DataViewerPage extends StatefulWidget {
   @override
@@ -191,6 +192,20 @@ class _DataViewerPageState extends State<DataViewerPage> {
             onNext: _nextPage,
           ),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 20.0),
+        child:FloatingActionButton(
+            backgroundColor: Colors.orange,
+            child: const Icon(Icons.add, color: Colors.white ),
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (context) => UserEditDialog(), // без userId
+              );
+              _loadData();
+            },
+          ),
       ),
     );
   }

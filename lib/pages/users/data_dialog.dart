@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+
+
 import '../../API/address.dart';
 import '../../API/persons.dart';
 import '../../API/role.dart';
+import '../../API/user_managment.dart';
 import '../../API/users.dart';
 import '../../config/user_provider.dart';
 
@@ -95,76 +98,50 @@ class _UserEditDialogState extends State<UserEditDialog> {
     final token = Provider.of<UserProvider>(context, listen: false).token;
     if (token == null) return;
 
-    final userService = UserService(token: token);
-    final personService = PersonService(token: token);
-    final addressService = AddressService(token: token);
+    print('userData: ${{
+      'login': _loginController.text,
+      'password': _passwordController.text,
+      'role_id': _selectedRoleId,
+    }}');
+    print('personData: ${{
+      'name': _nameController.text,
+      'last_name': _lastNameController.text,
+      'email': _emailController.text,
+      'phone': _phoneController.text,
+    }}');
+    print('addressData: ${{
+      'city': _cityController.text,
+      'street': _streetController.text,
+      'appartment': _appartmentController.text,
+    }}');
 
-    if (widget.userId == null) {
-      final addressId = await addressService.createAddress({
+    await saveUser(
+      token: token,
+      userId: widget.userId,
+      addressData: {
         'city': _cityController.text,
         'street': _streetController.text,
         'appartment': _appartmentController.text,
-      });
-
-      final personId = await personService.createPerson({
+      },
+      personData: {
         'name': _nameController.text,
         'last_name': _lastNameController.text,
         'email': _emailController.text,
         'phone': _phoneController.text,
-        'address_id': addressId,
-      });
-
-      await userService.createUser({
+      },
+      userData: {
         'login': _loginController.text,
-        'password': _passwordController.text,
-        'person_id': personId,
+        if (_passwordController.text.isNotEmpty) 'password': _passwordController.text,
         'role_id': _selectedRoleId,
-      });
-    } else {
-      final updates = <Future>[];
-
-      if (_nameController.text != (_originalPerson['name'] ?? '') ||
-          _lastNameController.text != (_originalPerson['last_name'] ?? '') ||
-          _emailController.text != (_originalPerson['email'] ?? '') ||
-          _phoneController.text != (_originalPerson['phone'] ?? '')) {
-        updates.add(personService.updatePerson(_originalPerson['id'], {
-          'name': _nameController.text,
-          'last_name': _lastNameController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-        }));
-      }
-
-      if (_cityController.text != (_originalAddress['city'] ?? '') ||
-          _streetController.text != (_originalAddress['street'] ?? '') ||
-          _appartmentController.text != (_originalAddress['appartment'] ?? '')) {
-        updates.add(addressService.updateAddress(_originalAddress['id'], {
-          'city': _cityController.text,
-          'street': _streetController.text,
-          'appartment': _appartmentController.text,
-        }));
-      }
-
-      final userUpdates = <String, dynamic>{};
-      if (_loginController.text != (_originalUser['login'] ?? '')) {
-        userUpdates['login'] = _loginController.text;
-      }
-      if (_passwordController.text.isNotEmpty) {
-        userUpdates['password'] = _passwordController.text;
-      }
-      if (_selectedRoleId != _originalUser['role_id']) {
-        userUpdates['role_id'] = _selectedRoleId;
-      }
-
-      if (userUpdates.isNotEmpty) {
-        updates.add(userService.updateUser(widget.userId!, userUpdates));
-      }
-
-      await Future.wait(updates);
-    }
+      },
+      originalUser: widget.user,
+      originalPerson: widget.person,
+      originalAddress: widget.address,
+    );
 
     Navigator.pop(context);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -239,45 +216,54 @@ class _UserEditDialogState extends State<UserEditDialog> {
 
 
   Widget _buildAddressTab() {
-    return Column(
-      children: [
-        _orangeTextField(_cityController, 'Город'),
-        _orangeTextField(_streetController, 'Улица'),
-        _orangeTextField(_appartmentController, 'Квартира'),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _orangeTextField(_cityController, 'Город'),
+          _orangeTextField(_streetController, 'Улица'),
+          _orangeTextField(_appartmentController, 'Квартира'),
+        ],
+      ),
     );
   }
+
 
   Widget _buildPersonTab() {
-    return Column(
-      children: [
-        _orangeTextField(_nameController, 'Имя'),
-        _orangeTextField(_lastNameController, 'Фамилия'),
-        _orangeTextField(_emailController, 'Email'),
-        _orangeTextField(_phoneController, 'Телефон'),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _orangeTextField(_nameController, 'Имя'),
+          _orangeTextField(_lastNameController, 'Фамилия'),
+          _orangeTextField(_emailController, 'Email'),
+          _orangeTextField(_phoneController, 'Телефон'),
+        ],
+      ),
     );
   }
 
+
   Widget _buildUserTab() {
-    return Column(
-      children: [
-        _orangeTextField(_loginController, 'Логин'),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Пароль',
-            labelStyle: TextStyle(color: Colors.orange),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.orange),
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _orangeTextField(_loginController, 'Логин'),
+          TextField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Пароль',
+              labelStyle: TextStyle(color: Colors.orange),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.orange),
+              ),
+              border: OutlineInputBorder(),
             ),
-            border: OutlineInputBorder(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
 
   Widget _orangeTextField(TextEditingController controller, String label) {
     return Padding(
@@ -293,6 +279,7 @@ class _UserEditDialogState extends State<UserEditDialog> {
           border: const OutlineInputBorder(),
         ),
       ),
+
     );
   }
 }

@@ -119,6 +119,7 @@ class UserDetailPage extends StatelessWidget {
         ],
       ),
       bottomSheet: Container(
+
         color: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

@@ -1,4 +1,6 @@
 import '../API/API.dart';
+import 'persons.dart';
+import 'address.dart';
 
 class UserService {
   final API _api;
@@ -46,13 +48,19 @@ class UserService {
     return {'totalCount': 0, 'items': []};
   }
 
-  Future<int?> createUser(Map<String, dynamic> data) async {
+  Future<int> createUser(Map<String, dynamic> data) async {
     final response = await _api.request(RequestMethod.post, '/users/create', data: data);
+
     if (response.status == 200 || response.status == 201) {
       return response.body['id'];
     }
+
     print('Ошибка создания пользователя: ${response.status}');
-    return null;
+
+    throw response;
   }
 
 }
+
+
+

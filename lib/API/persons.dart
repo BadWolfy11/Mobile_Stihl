@@ -73,8 +73,8 @@ class PersonService {
     if (response.status == 200 || response.status == 201) {
       return response.body['id'];
     }
-    print('Ошибка создания персоны: ${response.status}');
     return null;
   }
+
 }
 
