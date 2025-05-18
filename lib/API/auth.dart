@@ -6,10 +6,10 @@ import 'API.dart';
 
 class AuthService {
   final API _api = API();
-  // использует зашифрованное хранилище на андройде keystore
+
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  /// Авторизация пользователя
+
   Future<Map<String, dynamic>?> login(String login, String password) async {
     final response = await _api.request(
       RequestMethod.post,
@@ -21,13 +21,13 @@ class AuthService {
     );
 
     if (response.status == 200 && response.body['access_token'] != null) {
-      return response.body; // вернёт user_id, access_token и т.д.
+      return response.body; 
     }
 
     return null;
   }
 
-  /// Регистрация (опционально)
+
   Future<bool> register(String login, String password, String passwordConfirm) async {
     final response = await _api.request(
       RequestMethod.post,
@@ -48,11 +48,11 @@ class AuthService {
     return false;
   }
 
-  /// Выход из аккаунта
+
   Future<void> logout() async {
     await _storage.deleteAll();
   }
 
-  /// Получение токена
+
   Future<String?> getToken() => _storage.read(key: 'auth_token');
 }

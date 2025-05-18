@@ -6,6 +6,7 @@ import 'package:stihl_mobile/pages/users/data_viewer_page.dart';
 import '../config/user_provider.dart';
 import '../theme/light_color.dart';
 import '../theme/theme.dart';
+import 'goods_history/history_page.dart';
 import 'scanner/scan_Page.dart';
 import 'profile/profile_page.dart';
 
@@ -194,7 +195,10 @@ class _MainPageState extends State<MainPage> {
               'История',
               Icons.history,
                   () {
-                // TODO: Навигация на страницу истории
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => GoodsHistoryPage()),
+                    );
               },
             ),
           ],

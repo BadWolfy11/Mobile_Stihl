@@ -15,7 +15,7 @@ class PaginationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const buttonWidth = 100.0; // Задаём фиксированную ширину кнопок
+    const buttonWidth = 100.0;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -30,7 +30,7 @@ class PaginationBar extends StatelessWidget {
               child: Text('Назад'),
             )
                 : ElevatedButton(
-              onPressed: null, // неактивная кнопка
+              onPressed: null,
               child: Text('Назад'),
             ),
           ),
@@ -45,7 +45,7 @@ class PaginationBar extends StatelessWidget {
               child: Text('Вперед'),
             )
                 : ElevatedButton(
-              onPressed: null, // неактивная кнопка
+              onPressed: null,
               child: Text('Вперед'),
             ),
           ),
