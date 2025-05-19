@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Expanded(child: mainArea),
                 SafeArea(
                   child: CustomBottomNavigationBar(
-                    onIconPresedCallback: (int index) {
+                    onIconPressed: (int index) {
                       setState(() {
                         selectedIndex = index;
                       });
