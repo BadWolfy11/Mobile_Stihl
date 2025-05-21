@@ -75,7 +75,6 @@ class _ScanState extends State<ScanScreen> {
           : Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 🖼 Картинка товара
           Image.asset(
             foundProduct!['attachments'] ?? '',
             height: 250,

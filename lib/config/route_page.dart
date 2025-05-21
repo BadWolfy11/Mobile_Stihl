@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stihl_mobile/pages/goods/goods_page.dart';
 import 'package:stihl_mobile/pages/main_page.dart';
 
+import '../pages/export/document_export.dart';
 import '../widgets/BottomNavigationBar/bottom_navigation_bar.dart';
 import '../pages/expenses/expenses_page.dart';
 
@@ -30,7 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = ExpensesPage();
         break;
       case 3:
-        page = Center(child: Text("Остальные затраты"));
+        page = DocumentsExportPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');

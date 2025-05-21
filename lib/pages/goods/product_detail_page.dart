@@ -180,7 +180,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     const SizedBox(height: 16),
                     _infoRow("Описание", product!['description']),
-                    _infoRow("Категория", product!['category_id'] ?? 'Без категории'),
+                    _infoRow("Категория", "${product!['category']}" ?? 'Без категории'),
                     _infoRow("Остаток", "${product!['stock']} шт."),
                     const SizedBox(height: 20),
                     Center(

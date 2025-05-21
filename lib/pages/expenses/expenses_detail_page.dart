@@ -80,8 +80,6 @@ class ExpensesDetailPage extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
-          _infoRow("Описание", expense['description'] ?? 'Нет описания'),
-          _infoRow("Категория", expense['category'] ?? 'Не указано'),
           _infoRow("Дата", "${expenseDate.toLocal().toString().split(' ')[0]}"),
         ],
       ),

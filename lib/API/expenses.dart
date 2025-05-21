@@ -15,17 +15,40 @@ class ExpensesService {
       'limit': limit.toString(),
       'offset': offset.toString(),
     };
-    if (name != null && name.isNotEmpty) params['name'] = name;
-    if (categoryId != null) params['expense_category_id'] = categoryId.toString();
 
-    final response = await _api.request(RequestMethod.get, '/expenses/search', params: params);
+    if (name != null && name.isNotEmpty) {
+      params['name'] = name;
+    }
 
-    if (response.status == 200 && response.body is Map<String, dynamic>) {
-      return Map<String, dynamic>.from(response.body);
+    if (categoryId != null) {
+      params['expense_category_id'] = categoryId.toString();
+    }
+
+    // ЛОГ параметров перед запросом
+    print('[searchExpenses] Параметры запроса: $params');
+
+    try {
+      final response = await _api.request(RequestMethod.get, '/expenses/search', params: params);
+
+      // ЛОГ ответа сервера
+      print('[searchExpenses] Статус: ${response.status}');
+      print('[searchExpenses] Ответ: ${response.body}');
+
+      if (response.status == 200 && response.body is Map<String, dynamic>) {
+        return Map<String, dynamic>.from(response.body);
+      }
+
+      // ЛОГ при неожидаемом статусе
+      print('[searchExpenses] Неожиданный ответ: ${response.status}');
+    } catch (e, stacktrace) {
+      // ЛОГ исключения
+      print('[searchExpenses] Ошибка при запросе: $e');
+      print(stacktrace);
     }
 
     return {'items': [], 'totalCount': 0};
   }
+
 
   Future<bool> deleteExpense(int id) async {
     final response = await _api.request(
