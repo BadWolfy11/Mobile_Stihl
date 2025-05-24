@@ -108,10 +108,6 @@ class _GoodsPageState extends State<GoodsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Товары', style: TextStyle(fontSize: 24)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Column(
         children: [
