@@ -1,12 +1,18 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'dart:io';
 
 class PDFExportService {
+  static String _randomFileName(String prefix) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = Random().nextInt(10000);
+    return '$prefix-$timestamp-$random.pdf';
+  }
+
   static Future<File> exportGoods(List<Map<String, dynamic>> goods) async {
     final pdf = pw.Document(
       theme: pw.ThemeData.withFont(
@@ -19,12 +25,16 @@ class PDFExportService {
 
     pdf.addPage(
       pw.MultiPage(
+        header: (context) => pw.Text(
+          'Отчёт по товарам',
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
         build: (context) {
           final List<pw.Widget> content = [];
 
           for (var item in goods) {
             final name = item['name'] ?? '—';
-            final quantity = (item['quantity'] ?? 0).toDouble();
+            final quantity = (item['stock'] ?? 0).toDouble();
             final price = (item['price'] ?? 0).toDouble();
 
             totalQuantity += quantity;
@@ -46,27 +56,13 @@ class PDFExportService {
       ),
     );
 
+
     final output = await getDownloadsDirectory();
-    final file = File('${output?.path}/goods_export.pdf');
+    final fileName = _randomFileName('goods_export');
+    final file = File('${output?.path}/$fileName');
+
     await file.writeAsBytes(await pdf.save());
-    if (!Platform.isLinux && !Platform.isWindows && !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS) {
-      print('OpenFile not supported on this platform');
-    } else {
-      try {
-        await OpenFile.open(file.path);
-      } catch (e) {
-        print('Ошибка при открытии файла: \$e');
-      }
-    }
-    if (!Platform.isLinux && !Platform.isWindows && !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS) {
-      print('OpenFile not supported on this platform');
-    } else {
-      try {
-        await OpenFile.open(file.path);
-      } catch (e) {
-        print('Ошибка при открытии файла: \$e');
-      }
-    }
+    _tryOpenFile(file);
     return file;
   }
 
@@ -80,6 +76,10 @@ class PDFExportService {
 
     pdf.addPage(
       pw.MultiPage(
+        header: (context) => pw.Text(
+          'Отчёт по товарам',
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
         build: (context) {
           final List<pw.Widget> content = [];
 
@@ -102,8 +102,19 @@ class PDFExportService {
     );
 
     final output = await getDownloadsDirectory();
-    final file = File('${output?.path}/expenses_export1.pdf');
+    final fileName = _randomFileName('expenses_export');
+    final file = File('${output?.path}/$fileName');
+
     await file.writeAsBytes(await pdf.save());
+    _tryOpenFile(file);
     return file;
+  }
+
+  static Future<void> _tryOpenFile(File file) async {
+    try {
+      await OpenFile.open(file.path);
+    } catch (e) {
+      print('Ошибка при открытии файла: $e');
+    }
   }
 }

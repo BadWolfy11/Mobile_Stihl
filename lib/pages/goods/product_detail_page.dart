@@ -193,7 +193,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Padding(
+      bottomNavigationBar: Provider.of<UserProvider>(context).roleId != 1001
+          ? Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
@@ -216,12 +217,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 icon: Icon(Icons.delete, color: Colors.white),
                 label: Text("Удалить", style: TextStyle(color: Colors.white)),
-                  onPressed: () => showDeleteGoodsDialog(context, product!['id'], () {}),
+                onPressed: () =>
+                    showDeleteGoodsDialog(context, product!['id'], () {}),
               ),
             ),
           ],
         ),
-      ),
+      )
+          : null,
     );
   }
 }

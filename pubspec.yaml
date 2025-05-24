@@ -46,7 +46,14 @@ dependencies:
   open_file: ^3.3.2
 
 
+flutter_launcher_name:
+  name: "STIHL"
 
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/Logo.png"
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -78,7 +85,7 @@ flutter:
     - assets/images/products/
     - assets/images/products/product1.jpg
     - assets/
-    - assets/fonts
+    - assets/fonts/Roboto-Regular.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

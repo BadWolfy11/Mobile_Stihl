@@ -92,6 +92,8 @@ class _GoodsPageState extends State<GoodsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final roleId = Provider.of<UserProvider>(context).roleId;
+
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -138,8 +140,7 @@ class _GoodsPageState extends State<GoodsPage> {
               itemBuilder: (context, index) {
                 return GoodsCard(
                   goods: displayedGoods[index],
-                    onTap: () => _showProductDetail(displayedGoods[index]['id']),
-
+                  onTap: () => _showProductDetail(displayedGoods[index]['id']),
                 );
               },
             ),
@@ -152,14 +153,16 @@ class _GoodsPageState extends State<GoodsPage> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
+      floatingActionButton: roleId != 1001
+          ? Padding(
         padding: const EdgeInsets.only(bottom: 60.0),
         child: FloatingActionButton(
           backgroundColor: LightColor.orange,
           child: const Icon(Icons.add, color: Colors.white),
           onPressed: _showAddDialog,
         ),
-      ),
+      )
+          : null,
     );
   }
 }

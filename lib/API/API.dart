@@ -49,7 +49,7 @@ class API {
   final String? token;
 
   // API({this.token, this.baseUrl = 'https://backend.academytop.ru/api'}); // If need open to public
-  API({this.token, this.baseUrl = 'http://192.168.178.130:8000/api'}); // Change to computer IP, if connecting from mobile/emulator.
+  API({this.token, this.baseUrl = 'http://192.168.146.130:8000/api'}); // Change to computer IP, if connecting from mobile/emulator.
 
   Future<APIResponse> request(
       RequestMethod method,

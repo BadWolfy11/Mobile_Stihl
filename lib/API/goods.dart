@@ -31,18 +31,7 @@ class GoodsService {
     return [];
   }
 
-  Future<Map<String, dynamic>?> getGoodsById(int id) async {
-    final response = await _api.request(
-      RequestMethod.get,
-      '/goods/get/$id',
-    );
 
-    if (response.status == 200 && response.body is Map<String, dynamic>) {
-      return response.body;
-    }
-
-    return null;
-  }
 
   Future<bool> createGoods(Map<String, dynamic> data) async {
     final response = await _api.request(RequestMethod.post, '/goods/create', data: data);
@@ -51,10 +40,25 @@ class GoodsService {
 
   Future<bool> updateGoods(int id, Map<String, dynamic> data) async {
     print(data);
-    final response = await _api.request(RequestMethod.patch, '/goods/update/$id', data: data);
+    final response = await _api.request(RequestMethod.patch, '/goods/$id', data: data);
 
     return response.status == 200;
   }
+
+  Future<Map<String, dynamic>> getGoodsById(int id) async {
+    final response = await _api.request(
+      RequestMethod.get,
+      '/goods/search',
+      params: {'id': id.toString()},
+    );
+
+    if (response.status == 200 && response.body is List && response.body.isNotEmpty) {
+      return Map<String, dynamic>.from(response.body.first);
+    }
+
+    throw Exception('Товар не найден');
+  }
+
 
   Future<bool> deleteGoods(int id) async {
     final response = await _api.request(

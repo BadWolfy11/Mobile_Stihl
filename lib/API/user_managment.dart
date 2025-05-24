@@ -1,8 +1,8 @@
 import 'package:stihl_mobile/API/API.dart';
-
 import 'address.dart';
 import 'persons.dart';
 import 'users.dart';
+import 'auth.dart';
 
 Future<void> saveUser({
   required String token,
@@ -17,36 +17,44 @@ Future<void> saveUser({
   final addressService = AddressService(token: token);
   final personService = PersonService(token: token);
   final userService = UserService(token: token);
+  final authService = AuthService();
 
   if (userId == null) {
     final addressId = await addressService.createAddress(addressData);
-    final personId = await personService.createPerson({...personData, 'address_id': addressId});
+    final personId = await personService.createPerson({
+      ...personData,
+      'address_id': addressId,
+    });
 
-    try {
-      final user = await userService.createUser(
-          {...userData, 'person_id': personId}
-      );
-    } on APIResponse catch (e) {
-      if (e.status == 422 && e.body['detail'].contains('is already registered')) {
-        // delete address by id
-        // delete person by id
-        // return error message - user with current username already registered
-      }
-      // return "unknown error"
-    } catch (e) {
-      // return "unknown error"
+    final login = userData['login'];
+    final password = userData['password'];
+    final roleId = userData['role_id'];
+
+    if (login == null || password == null || roleId == null) {
+      throw Exception("Missing login, password, or roleId for registration");
+    }
+    print(' блин ${personId}');
+    final response = await authService.register(
+      login,
+      password,
+      password,
+      personId!,
+      roleId,
+    );
+
+    if (!response) {
+      throw Exception("Registration failed");
     }
   } else {
     final updates = <Future>[];
 
     if (originalUser != null && userData['login'].toString() != originalUser['login'].toString()) {
       final candidate = await userService.searchUsers(
-        login: userData['login'].toString()
+        login: userData['login'].toString(),
       );
 
       if (candidate['totalCount'] > 0) {
-        print('user alredy exists');
-
+        print('user already exists');
         return;
       }
     }

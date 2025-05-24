@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../config/user_provider.dart';
 import 'good_actions.dart';
 import 'goods_dialog.dart';
 
 class GoodsCard extends StatelessWidget {
   final Map<String, dynamic> goods;
-
   final VoidCallback onTap;
 
-  const GoodsCard({Key? key, required this.goods,  required this.onTap,}) : super(key: key);
+  const GoodsCard({Key? key, required this.goods, required this.onTap}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final roleId = Provider.of<UserProvider>(context).roleId;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -28,7 +32,7 @@ class GoodsCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-            onTap: onTap, // при необходимости можно реализовать
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -41,7 +45,7 @@ class GoodsCard extends StatelessWidget {
                     height: 60,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
-                        Icon(Icons.image_not_supported, size: 50),
+                    const Icon(Icons.image_not_supported, size: 50),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -51,7 +55,7 @@ class GoodsCard extends StatelessWidget {
                     children: [
                       Text(
                         '${goods['id']} - ${goods['name']}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -69,7 +73,7 @@ class GoodsCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Text(
+                          const Text(
                             'Цена: ',
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
@@ -84,7 +88,7 @@ class GoodsCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Text(
+                          const Text(
                             'Кол-во: ',
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
@@ -93,26 +97,28 @@ class GoodsCard extends StatelessWidget {
                           ),
                           Text(
                             '${goods['stock']}',
-                            style: TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Colors.orange),
-                      onPressed: () => _showEditDialog(context, goods['id']),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => showDeleteGoodsDialog(context, goods['id'], () {}),
-                    ),
-                  ],
-                ),
+                if (roleId != 1001) // Показывать кнопки только не для продавца
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.orange),
+                        onPressed: () => _showEditDialog(context, goods['id']),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () =>
+                            showDeleteGoodsDialog(context, goods['id'], () {}),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -128,4 +134,3 @@ void _showEditDialog(BuildContext context, int id) {
     builder: (context) => GoodsDialog(itemId: id),
   );
 }
-

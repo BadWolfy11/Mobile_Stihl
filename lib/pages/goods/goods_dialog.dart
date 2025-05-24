@@ -22,17 +22,44 @@ class _GoodsDialogState extends State<GoodsDialog> {
   final _barcodeController = TextEditingController();
   final _stockController = TextEditingController();
   File? _selectedImage;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.itemId != null) {
-      // Для реального случая — загрузить данные из API
-      _nameController.text = 'Товар ${widget.itemId}';
-      _descriptionController.text = 'Описание товара ${widget.itemId}';
-      _barcodeController.text = '460${1000000000 + (widget.itemId! - 1)}';
-      _stockController.text = '${(widget.itemId! - 1) * 5}';
+      _loadGoodsData(widget.itemId!);
     }
+  }
+
+  Future<void> _loadGoodsData(int id) async {
+    setState(() => _isLoading = true);
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+    if (token == null) return;
+
+    final service = GoodsService(token: token);
+    try {
+      final product = await service.getGoodsById(id);
+      setState(() {
+        _nameController.text = product['name'] ?? '';
+        _descriptionController.text = product['description'] ?? '';
+        _barcodeController.text = product['barcode'] ?? '';
+        _stockController.text = (product['stock'] ?? '').toString();
+
+        final attachments = product['attachments'];
+        if (attachments != null && attachments.isNotEmpty) {
+          final file = File(attachments);
+          if (file.existsSync()) {
+            _selectedImage = file;
+          }
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки товара: $e')),
+      );
+    }
+    setState(() => _isLoading = false);
   }
 
   @override
@@ -63,9 +90,8 @@ class _GoodsDialogState extends State<GoodsDialog> {
     final fileName = imageFile.path.split('/').last;
     final localPath = '${productsDir.path}/$fileName';
     final savedImage = await imageFile.copy(localPath);
-    return 'assets/images/products/$fileName'; // путь для записи в БД
+    return localPath; // Сохраняем путь для БД
   }
-
 
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -76,7 +102,6 @@ class _GoodsDialogState extends State<GoodsDialog> {
     final service = GoodsService(token: token);
 
     final name = _nameController.text;
-    // final category_id = _catego
     final description = _descriptionController.text;
     final barcode = _barcodeController.text;
     final stock = int.tryParse(_stockController.text) ?? 0;
@@ -88,9 +113,7 @@ class _GoodsDialogState extends State<GoodsDialog> {
 
     final data = {
       'name': name,
-      // 'category_id': ,
       'description': description,
-      // 'price': ,
       'barcode': barcode,
       'stock': stock,
       if (imagePath != null) 'attachments': imagePath,
@@ -98,11 +121,9 @@ class _GoodsDialogState extends State<GoodsDialog> {
 
     bool success = false;
     if (widget.itemId == null) {
-      final response = await service.createGoods(data);
-      success = response;
+      success = await service.createGoods(data);
     } else {
-      final response = await service.updateGoods(widget.itemId!, data);
-      success = response;
+      success = await service.updateGoods(widget.itemId!, data);
     }
 
     if (success) {
@@ -121,7 +142,9 @@ class _GoodsDialogState extends State<GoodsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.itemId == null ? 'Добавить товар' : 'Редактировать товар'),
-      content: Form(
+      content: _isLoading
+          ? const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()))
+          : Form(
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(

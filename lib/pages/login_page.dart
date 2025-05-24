@@ -49,6 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
             lastName: person['last_name'],
             email: person['email'],
             phone: person['phone'],
+            roleId: result['role_id'],
           );
         }
 

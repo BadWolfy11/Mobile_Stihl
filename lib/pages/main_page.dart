@@ -51,20 +51,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Route _slideFromLeftRoute(Map<String, dynamic> user) {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          UserProfileScreen(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(-1.0, 0.0);
-        const end = Offset.zero;
-        const curve = Curves.easeInOut;
-        final tween =
-        Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        return SlideTransition(position: animation.drive(tween), child: child);
-      },
-    );
-  }
 
   Widget _avatarInAppBar(BuildContext context) {
     return GestureDetector(
@@ -117,6 +103,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     final userId = Provider.of<UserProvider>(context).userId;
+    final user = Provider.of<UserProvider>(context);
 
     if (userId == null) {
       Future.microtask(() {
@@ -179,28 +166,31 @@ class _MainPageState extends State<MainPage> {
                 );
               },
             ),
-            _actionButton(
-              context,
-              'Данные',
-              Icons.people,
-                  () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => DataViewerPage()),
-                );
-              },
-            ),
-            _actionButton(
-              context,
-              'История',
-              Icons.history,
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => GoodsHistoryPage()),
-                    );
-              },
-            ),
+            if (user.canViewUsers)
+              _actionButton(
+                context,
+                'Данные',
+                Icons.people,
+                    () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => DataViewerPage()),
+                  );
+                },
+              ),
+
+            if (user.canEditGoods)
+              _actionButton(
+                context,
+                'История',
+                Icons.history,
+                    () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => GoodsHistoryPage()),
+                  );
+                },
+              ),
           ],
         ),
       ),
