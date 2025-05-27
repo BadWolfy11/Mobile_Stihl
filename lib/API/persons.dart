@@ -26,6 +26,9 @@ class PersonService {
     }
   }
 
+  Future<bool> deletePerson(int id) async => await _api.request(
+    RequestMethod.delete, '/person/delete/$id',
+  ).then((res) => res.status == 200);
   Future<bool> updatePerson(int id, Map<String, dynamic> data) async {
     final response = await _api.request(
       RequestMethod.patch,

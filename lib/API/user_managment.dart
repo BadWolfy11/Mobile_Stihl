@@ -1,4 +1,3 @@
-import 'package:stihl_mobile/API/API.dart';
 import 'address.dart';
 import 'persons.dart';
 import 'users.dart';
@@ -70,5 +69,29 @@ Future<void> saveUser({
     }
 
     await Future.wait(updates);
+  }
+
+
+
+}
+
+Future<bool> deleteUserWithRelations({
+  required String token,
+  required int userId,
+  required int? personId,
+  required int? addressId,
+}) async {
+  final userService = UserService(token: token);
+  final personService = PersonService(token: token);
+  final addressService = AddressService(token: token);
+
+  try {
+    await userService.deleteUser(userId);
+    if (personId != null) await personService.deletePerson(personId);
+    if (addressId != null) await addressService.deleteAddress(addressId);
+    return true;
+  } catch (e) {
+    print('Ошибка при удалении: $e');
+    return false;
   }
 }

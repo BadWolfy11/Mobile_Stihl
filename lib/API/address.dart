@@ -23,4 +23,8 @@ class AddressService {
     print('Ошибка создания адреса: ${response.status}');
     return null;
   }
+
+  Future<bool> deleteAddress(int id) async => await _api.request(
+    RequestMethod.delete, '/address/delete/$id',
+  ).then((res) => res.status == 200);
 }

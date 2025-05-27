@@ -60,6 +60,14 @@ class UserService {
     throw response;
   }
 
+  Future<bool> deleteUser(int id) async {
+    final response = await _api.request(
+      RequestMethod.delete,
+      '/users/delete/$id',
+    );
+    return response.status == 200;
+  }
+
 }
 
 

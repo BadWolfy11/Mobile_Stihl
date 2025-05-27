@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'data_dialog.dart'; // путь к форме редактирования пользователя
+import 'package:provider/provider.dart';
+import '../../config/user_provider.dart';
+import 'data_dialog.dart';
+import '../../API/user_managment.dart';
 
 class UserDetailPage extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -71,6 +74,8 @@ class UserDetailPage extends StatelessWidget {
 
 
   void _showDeleteConfirmation(BuildContext context) {
+    final token = Provider.of<UserProvider>(context, listen: false).token;
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -85,11 +90,21 @@ class UserDetailPage extends StatelessWidget {
             icon: const Icon(Icons.delete, color: Colors.white),
             label: const Text("Удалить", style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
+              final success = await deleteUserWithRelations(
+                token: token!,
+                userId: user['id'],
+                personId: user['person_id'],
+                addressId: person['address_id'],
+              );
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Пользователь удалён (демо)")),
+                SnackBar(
+                  content: Text(success
+                      ? "Пользователь удалён"
+                      : "Ошибка при удалении пользователя"),
+                ),
               );
             },
           ),
@@ -97,6 +112,7 @@ class UserDetailPage extends StatelessWidget {
       ),
     );
   }
+
 
 
   @override
