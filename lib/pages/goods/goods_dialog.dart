@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+
 import '../../API/goods.dart';
+import '../../API/image_loader.dart';
+import '../../API/image_managment.dart';
 import '../../config/user_provider.dart';
+import '../../API/API.dart';
 
 class GoodsDialog extends StatefulWidget {
   final int? itemId;
@@ -21,7 +24,11 @@ class _GoodsDialogState extends State<GoodsDialog> {
   final _descriptionController = TextEditingController();
   final _barcodeController = TextEditingController();
   final _stockController = TextEditingController();
+
   File? _selectedImage;
+  String? _existingImageUrl;
+  String? _oldImageUrl;
+
   bool _isLoading = false;
 
   @override
@@ -45,13 +52,10 @@ class _GoodsDialogState extends State<GoodsDialog> {
         _descriptionController.text = product['description'] ?? '';
         _barcodeController.text = product['barcode'] ?? '';
         _stockController.text = (product['stock'] ?? '').toString();
-
         final attachments = product['attachments'];
         if (attachments != null && attachments.isNotEmpty) {
-          final file = File(attachments);
-          if (file.existsSync()) {
-            _selectedImage = file;
-          }
+          _existingImageUrl = attachments;
+          _oldImageUrl = attachments;
         }
       });
     } catch (e) {
@@ -76,21 +80,9 @@ class _GoodsDialogState extends State<GoodsDialog> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _existingImageUrl = null;
       });
     }
-  }
-
-  Future<String?> _saveImageLocally(File imageFile) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final productsDir = Directory('${appDir.path}/products');
-    if (!await productsDir.exists()) {
-      await productsDir.create(recursive: true);
-    }
-
-    final fileName = imageFile.path.split('/').last;
-    final localPath = '${productsDir.path}/$fileName';
-    final savedImage = await imageFile.copy(localPath);
-    return localPath; // Сохраняем путь для БД
   }
 
   Future<void> _saveForm() async {
@@ -99,32 +91,31 @@ class _GoodsDialogState extends State<GoodsDialog> {
     final token = Provider.of<UserProvider>(context, listen: false).token;
     if (token == null) return;
 
-    final service = GoodsService(token: token);
+    final goodsService = GoodsService(token: token);
+    final imageService = ImageService(token: token);
 
-    final name = _nameController.text;
-    final description = _descriptionController.text;
-    final barcode = _barcodeController.text;
-    final stock = int.tryParse(_stockController.text) ?? 0;
-    String? imagePath;
-
+    String? imageUrl;
     if (_selectedImage != null) {
-      imagePath = await _saveImageLocally(_selectedImage!);
+      imageUrl = await imageService.uploadImage(_selectedImage!);
+      print('Загружено изображение: $imageUrl');
+
+      if (_oldImageUrl != null && _oldImageUrl != imageUrl) {
+        await imageService.deleteImage(_oldImageUrl!);
+        print('Удалено старое изображение: $_oldImageUrl');
+      }
     }
 
     final data = {
-      'name': name,
-      'description': description,
-      'barcode': barcode,
-      'stock': stock,
-      if (imagePath != null) 'attachments': imagePath,
+      'name': _nameController.text,
+      'description': _descriptionController.text,
+      'barcode': _barcodeController.text,
+      'stock': int.tryParse(_stockController.text) ?? 0,
+      if (imageUrl != null) 'attachments': imageUrl,
     };
 
-    bool success = false;
-    if (widget.itemId == null) {
-      success = await service.createGoods(data);
-    } else {
-      success = await service.updateGoods(widget.itemId!, data);
-    }
+    final success = widget.itemId == null
+        ? await goodsService.createGoods(data)
+        : await goodsService.updateGoods(widget.itemId!, data);
 
     if (success) {
       Navigator.pop(context);
@@ -133,7 +124,25 @@ class _GoodsDialogState extends State<GoodsDialog> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при сохранении товара')),
+        const SnackBar(content: Text('Ошибка при сохранении товара')),
+      );
+    }
+  }
+
+  Widget _imagePreview() {
+    if (_selectedImage != null) {
+      return Image.file(
+        _selectedImage!,
+        height: 100,
+        width: 100,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return buildNetworkImage(
+        _existingImageUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
       );
     }
   }
@@ -152,14 +161,7 @@ class _GoodsDialogState extends State<GoodsDialog> {
             children: [
               GestureDetector(
                 onTap: _pickImage,
-                child: _selectedImage != null
-                    ? Image.file(_selectedImage!, height: 100, width: 100, fit: BoxFit.cover)
-                    : Container(
-                  height: 100,
-                  width: 100,
-                  color: Colors.grey[300],
-                  child: Icon(Icons.add_a_photo, color: Colors.grey[700]),
-                ),
+                child: _imagePreview(),
               ),
               const SizedBox(height: 10),
               TextFormField(

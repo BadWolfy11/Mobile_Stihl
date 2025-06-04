@@ -45,7 +45,7 @@ class APIResponse {
 }
 
 class API {
-  static const String baseHost = 'http://192.168.146.130:8000'; // без /api
+  static const String baseHost = 'http://192.168.146.130:8000';
 
   final String baseUrl;
   final String? token;

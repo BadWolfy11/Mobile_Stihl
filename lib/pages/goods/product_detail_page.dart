@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 
 import '../../API/goods.dart';
+import '../../API/image_managment.dart';
 import '../../config/user_provider.dart';
 import '../../theme/light_color.dart';
 import '../../theme/theme.dart';
@@ -50,13 +51,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ? imagePath.trim()
         : null;
 
-    print('attachments: ${product!['attachments']}2');
     if (path == null) {
       return Container(
         width: double.infinity,
         height: 250,
         color: Colors.grey[200],
         child: const Icon(Icons.image, size: 100, color: Colors.grey),
+      );
+    }
+
+
+    if (path.startsWith('http') || path.startsWith('/static')) {
+      return buildNetworkImage(
+        path,
+        width: double.infinity,
+        height: 250,
+        fit: BoxFit.cover,
+        borderRadius: BorderRadius.zero,
       );
     }
 
@@ -73,6 +84,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
     );
   }
+
 
 
 
@@ -98,32 +110,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Удалить товар"),
-        content: Text("Вы уверены, что хотите удалить этот товар?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Отмена"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Товар удалён (демо)')),
-              );
-            },
-            child: Text("Удалить", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +166,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     const SizedBox(height: 16),
                     _infoRow("Описание", product!['description']),
-                    _infoRow("Категория", "${product!['category']}" ?? 'Без категории'),
+                    _infoRow("Категория", "${product!['category_id']}" ?? 'Без категории'),
                     _infoRow("Остаток", "${product!['stock']} шт."),
                     const SizedBox(height: 20),
                     Center(

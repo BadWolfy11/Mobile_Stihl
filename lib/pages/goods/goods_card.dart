@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../API/image_managment.dart';
 import '../../config/user_provider.dart';
 import 'good_actions.dart';
 import 'goods_dialog.dart';
@@ -39,14 +40,14 @@ class GoodsCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    goods['attachments'] ?? 'assets/background.png',
+                  child: buildNetworkImage(
+                    goods['attachments'],
                     width: 60,
                     height: 60,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.image_not_supported, size: 50),
-                  ),
+                    borderRadius: BorderRadius.circular(12),
+                  )
+
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -6,11 +6,14 @@ import '../API/API.dart';
 
 class ImageService {
   final String token;
+  late final API _api;
 
-  ImageService({required this.token});
+  ImageService({required this.token}) {
+    _api = API(token: token);
+  }
 
   Future<String?> uploadImage(File file) async {
-    final uri = Uri.parse('${API.baseHost}/upload-image/');
+    final uri = Uri.parse('${API.baseHost}/api/upload-image/');
 
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
@@ -26,5 +29,21 @@ class ImageService {
 
     print('Ошибка загрузки изображения: ${response.statusCode}');
     return null;
+  }
+
+  Future<bool> deleteImage(String path) async {
+    final response = await _api.request(
+      RequestMethod.delete,
+      '/images/delete',
+      params: {'path': path},
+    );
+
+    if (response.status == 200) {
+      print('Удалено изображение: $path');
+      return true;
+    } else {
+      print('Ошибка удаления изображения: ${response.status}');
+      return false;
+    }
   }
 }
