@@ -5,7 +5,7 @@ class AppTheme {
   const AppTheme();
 
   static ThemeData lightTheme = ThemeData.light().copyWith(
-    scaffoldBackgroundColor: LightColor.background, // ВАЖНО
+    scaffoldBackgroundColor: LightColor.background,
     primaryColor: LightColor.background,
     cardColor: LightColor.background,
     textTheme: ThemeData.light().textTheme.copyWith(
@@ -13,7 +13,7 @@ class AppTheme {
     ),
     iconTheme: const IconThemeData(color: LightColor.iconColor),
     bottomAppBarTheme: BottomAppBarTheme(
-      color: LightColor.background, // Здесь указываем цвет фона
+      color: LightColor.background,
     ),
     dividerColor: LightColor.lightGrey,
     primaryTextTheme: ThemeData.light().textTheme.copyWith(

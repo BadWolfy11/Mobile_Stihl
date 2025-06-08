@@ -30,9 +30,8 @@ Future<void> saveUser({
     final roleId = userData['role_id'];
 
     if (login == null || password == null || roleId == null) {
-      throw Exception("Missing login, password, or roleId for registration");
+      throw Exception("Не хватает данных, Вы ввели не все данные для регистрации");
     }
-    print(' блин ${personId}');
     final response = await authService.register(
       login,
       password,
@@ -42,7 +41,7 @@ Future<void> saveUser({
     );
 
     if (!response) {
-      throw Exception("Registration failed");
+      throw Exception("Ошибка регистрации");
     }
   } else {
     final updates = <Future>[];
@@ -53,7 +52,7 @@ Future<void> saveUser({
       );
 
       if (candidate['totalCount'] > 0) {
-        print('user already exists');
+        print('Пользователь с таким ником уже существует');
         return;
       }
     }

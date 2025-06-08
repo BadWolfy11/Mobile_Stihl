@@ -52,7 +52,7 @@ class _GoodsPageState extends State<GoodsPage> {
     return _goods.where((product) {
       final matchesSearch = product['name']?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false ||
           product['description']?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false;
-
+      //поиск товара по категории
       final matchesCategory = _selectedCategoryId == null ||
           product['category_id'] == _selectedCategoryId;
 
@@ -60,6 +60,7 @@ class _GoodsPageState extends State<GoodsPage> {
     }).toList();
   }
 
+  //Работа с пагинацией страницы
   int get _totalPages => (_filteredGoods.length / _itemsPerPage).ceil();
 
   void _previousPage() {
@@ -74,13 +75,15 @@ class _GoodsPageState extends State<GoodsPage> {
     }
   }
 
+
+  //Открытие виджета создания нового товара
   void _showAddDialog() {
     showDialog(
       context: context,
       builder: (context) => GoodsDialog(),
     );
   }
-
+  //Открытие страницы детальной информации о продукте
   void _showProductDetail(int productId) {
     Navigator.push(
       context,
@@ -119,10 +122,12 @@ class _GoodsPageState extends State<GoodsPage> {
               });
             },
             onFilterSelected: (categoryName) {
+              //записываются ищется выбранная категория по названию
               final matchedCategory = _categories.firstWhere(
                     (cat) => cat['name'] == categoryName,
                 orElse: () => {'id': null},
               );
+              //фильтр обновляется
               setState(() {
                 _selectedCategoryId = matchedCategory['id'];
                 _currentPage = 1;
@@ -141,6 +146,7 @@ class _GoodsPageState extends State<GoodsPage> {
               },
             ),
           ),
+          //класс пагинации страницы
           PaginationBar(
             currentPage: _currentPage,
             totalPages: _totalPages,
@@ -149,6 +155,7 @@ class _GoodsPageState extends State<GoodsPage> {
           ),
         ],
       ),
+      // Работа с ролью ипользователя, если пользователь не работник торогового зала, то ему доступна функция создания роли
       floatingActionButton: roleId != 1001
           ? Padding(
         padding: const EdgeInsets.only(bottom: 60.0),

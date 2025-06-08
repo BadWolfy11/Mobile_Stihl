@@ -130,23 +130,4 @@ class ExpensesCard extends StatelessWidget {
   }
 
 
-  // Преобразуем строку в иконку
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'shopping_cart':
-        return Icons.shopping_cart;
-      case 'commute':
-        return Icons.commute;
-      case 'home':
-        return Icons.home;
-      case 'fastfood':
-        return Icons.fastfood;
-      case 'school':
-        return Icons.school;
-      case 'pets':
-        return Icons.pets;
-      default:
-        return Icons.account_balance_wallet;
-    }
-  }
 }

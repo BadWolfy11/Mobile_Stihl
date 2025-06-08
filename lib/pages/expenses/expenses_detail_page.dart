@@ -10,22 +10,22 @@ class ExpensesDetailPage extends StatelessWidget {
 
   const ExpensesDetailPage({Key? key, required this.expense}) : super(key: key);
 
-
-  Widget _iconSection() {
-    print(expense);
-    return Container(
-      width: double.infinity,
-      height: 200,
-      color: Colors.grey[100],
-      child: Center(
-        child: Icon(
-          expense['attachments'] == null ? IconData(int.parse(expense['attachments']), fontFamily: 'MaterialIcons') : Icons.money_off,
-          size: 100,
-          color: LightColor.lightGrey,
-        ),
-      ),
-    );
-  }
+  //
+  // Widget _iconSection() {
+  //   print(expense);
+  //   return Container(
+  //     width: double.infinity,
+  //     height: 200,
+  //     color: Colors.grey[100],
+  //     child: Center(
+  //       child: Icon(
+  //         expense['attachments'] == null ? IconData(int.parse(expense['attachments']), fontFamily: 'MaterialIcons') : Icons.money_off,
+  //         size: 100,
+  //         color: LightColor.lightGrey,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _infoRow(String label, String value, {bool highlight = false}) {
     return Padding(
@@ -98,7 +98,7 @@ class ExpensesDetailPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          _iconSection(),
+          // _iconSection(),
           Expanded(
             child: SingleChildScrollView(
               child: _detailSection(),

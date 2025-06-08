@@ -24,13 +24,13 @@ class ExpensesService {
       params['expense_category_id'] = categoryId.toString();
     }
 
-    // ЛОГ параметров перед запросом
+
     print('[searchExpenses] Параметры запроса: $params');
 
     try {
       final response = await _api.request(RequestMethod.get, '/expenses/search', params: params);
 
-      // ЛОГ ответа сервера
+
       print('[searchExpenses] Статус: ${response.status}');
       print('[searchExpenses] Ответ: ${response.body}');
 
@@ -38,10 +38,10 @@ class ExpensesService {
         return Map<String, dynamic>.from(response.body);
       }
 
-      // ЛОГ при неожидаемом статусе
+
       print('[searchExpenses] Неожиданный ответ: ${response.status}');
     } catch (e, stacktrace) {
-      // ЛОГ исключения
+
       print('[searchExpenses] Ошибка при запросе: $e');
       print(stacktrace);
     }

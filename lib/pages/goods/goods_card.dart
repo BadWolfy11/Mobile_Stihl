@@ -105,7 +105,7 @@ class GoodsCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (roleId != 1001) // Показывать кнопки только не для продавца
+                if (roleId != 1001)
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

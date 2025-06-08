@@ -6,7 +6,7 @@ import 'package:stihl_mobile/pages/login_page.dart';
 
 import 'config/user_provider.dart';
 import 'theme/theme.dart';
-import 'config/route_page.dart'; // здесь логика маршрутов
+import 'config/route_page.dart';
 
 Future<void> main() async {
   await initializeDateFormatting('ru_RU', null);
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/login',
     routes: {
     '/login': (context) => const LoginScreen(),
-    '/home': (context) => MyHomePage(), // отдельная страница маршрутов
+    '/home': (context) => MyHomePage(),
     },
     ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+/// класс, который хранит информацию об авторизованном пользователе
 class UserProvider with ChangeNotifier {
   int? _userId;
   String? _token;
@@ -10,6 +10,7 @@ class UserProvider with ChangeNotifier {
   String? _userPhone;
   int? _roleId;
 
+  ///класс позволяющий безопасно сохранять данные на устройстве в зашифрованном виде
   final _storage = const FlutterSecureStorage();
 
   int? get userId => _userId;

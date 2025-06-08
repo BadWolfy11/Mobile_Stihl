@@ -15,13 +15,16 @@ class CustomBottomNavigationBar extends StatefulWidget {
 class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
   int _selectedIndex = 0;
 
+  //вызывается при нажатии на кнопку, после чего оповещает родительский класс, вызвавший функцию об изменении
   void _onItemTapped(int index) {
     if (_selectedIndex == index) return;
     setState(() => _selectedIndex = index);
     widget.onIconPressed(index);
   }
 
+  // функция отрисовки меню
   Widget _buildIcon(IconData icon, int index) {
+    //проверка выранного пункта меню
     final isSelected = _selectedIndex == index;
 
     return Expanded(

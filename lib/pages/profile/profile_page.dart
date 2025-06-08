@@ -26,7 +26,6 @@ class UserProfileScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Простая иконка вместо изображения профиля
             Container(
               width: double.infinity,
               height: 200,
@@ -37,7 +36,6 @@ class UserProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Заголовок
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Align(
@@ -55,7 +53,6 @@ class UserProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Информационная карточка
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
@@ -84,7 +81,7 @@ class UserProfileScreen extends StatelessWidget {
 
             const Spacer(),
 
-            // Кнопка выхода
+
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               child: SizedBox(

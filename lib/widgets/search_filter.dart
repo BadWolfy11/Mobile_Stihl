@@ -26,7 +26,7 @@ class _SearchFilterWidgetState extends State<SearchFilterWidget> {
     super.initState();
     selectedCategory = widget.categories.isNotEmpty
         ? widget.categories.first
-        : 'Все'; // можно заменить на '', если "Все" нет в списке
+        : 'Все';
   }
 
   @override

@@ -12,6 +12,7 @@ class BarcodeWithCopyButton extends StatefulWidget {
   final double width;
   final double height;
 
+  // виджет, который принимает в себя текст штрих или кюар кода, а также его размеры
   const BarcodeWithCopyButton({
     super.key,
     required this.data,
@@ -28,24 +29,13 @@ class _BarcodeWithCopyButtonState extends State<BarcodeWithCopyButton> {
 
   Barcode _determineBarcodeType() {
     final data = widget.data;
+    // если данные длинные, либо содержат буквы, предполагается, что это qr код, иначе все кодируется в виде штрих кода
     final isLikelyQR = data.length > 20 || data.contains(RegExp(r'[A-Za-z]'));
     return isLikelyQR ? Barcode.qrCode() : Barcode.code128();
   }
 
-  Future<void> _copyBarcodeAsImage() async {
+  Future<void> _copyBarcodeAsText() async {
     try {
-      RenderRepaintBoundary boundary =
-      _barcodeKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-      await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final directory = await getTemporaryDirectory();
-      final imagePath = '${directory.path}/barcode.png';
-      final file = File(imagePath);
-      await file.writeAsBytes(pngBytes);
-
       await Clipboard.setData(ClipboardData(text: widget.data));
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -57,6 +47,7 @@ class _BarcodeWithCopyButtonState extends State<BarcodeWithCopyButton> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +77,7 @@ class _BarcodeWithCopyButtonState extends State<BarcodeWithCopyButton> {
           ),
           child: IconButton(
             icon: Icon(Icons.copy, color: Colors.black54),
-            onPressed: _copyBarcodeAsImage,
+            onPressed: _copyBarcodeAsText,
             tooltip: 'Скопировать код',
           ),
         )

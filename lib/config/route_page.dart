@@ -28,7 +28,6 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
 
     if (roleId != 1001) {
-      // если не консультант, добавляем остальные вкладки
       allowedPages.addAll([ExpensesPage(), DocumentsExportPage()]);
       allowedDestinations.addAll([
         NavigationRailDestination(icon: Icon(Icons.edit_document), label: Text('Документы')),

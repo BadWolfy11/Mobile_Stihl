@@ -16,7 +16,7 @@ class PDFExportService {
   static Future<File> exportGoods(List<Map<String, dynamic>> goods) async {
     final pdf = pw.Document(
       theme: pw.ThemeData.withFont(
-        base: await pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Regular.ttf")),
+        base: pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Regular.ttf")),
       ),
     );
     double totalQuantity = 0;

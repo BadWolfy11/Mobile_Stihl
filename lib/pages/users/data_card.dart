@@ -22,7 +22,6 @@ class DataCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
             offset: Offset(0, 4),
           ),
         ],
